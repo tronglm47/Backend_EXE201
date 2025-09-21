@@ -29,7 +29,7 @@ public partial class User
 
     [Required]
     [StringLength(255)]
-    public string PasswordHash { get; set; }
+    public string Password { get; set; }
 
     [Required]
     [StringLength(20)]

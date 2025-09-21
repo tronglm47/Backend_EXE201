@@ -6,6 +6,7 @@ namespace Services.Interfaces
     public interface IAuthService
     {
         Task<string> LoginAsync(string username, string password);
-        Task<UserResponse> GetUserInfoAsync(int userId); // Thêm DTO để tránh trả password
+        Task<UserResponse> GetUserInfoAsync(int userId);
+        Task<RegisterResponse> RegisterAsync(RegisterRequest request);
     }
 }

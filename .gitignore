@@ -346,3 +346,24 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# AppSettings files (contains sensitive data)
+appsettings.json
+appsettings.*.json
+!appsettings.Example.json
+
+# Database files
+*.db
+*.sqlite
+*.mdf
+*.ldf
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production

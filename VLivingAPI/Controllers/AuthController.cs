@@ -11,57 +11,128 @@ namespace VLivingAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            // Validate model state
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Login request validation failed for username: {Username}", request?.Username);
+                return BadRequest(ModelState);
+            }
+
+            // Additional null checks
+            if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                _logger.LogWarning("Login request with empty credentials from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "Username and password are required" });
+            }
+
             try
             {
-                var token = await _authService.LoginAsync(request.Username, request.Password);
+                var token = await _authService.LoginAsync(request.Username.Trim(), request.Password);
                 var response = new LoginResponse { Token = token };
+                
+                _logger.LogInformation("Login successful for username: {Username}", request.Username);
                 return Ok(response);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Login failed for username: {Username}, IP: {IP}", 
+                    request.Username, HttpContext.Connection.RemoteIpAddress);
+                return Unauthorized(new { message = "Invalid username or password" });
             }
             catch (Exception ex)
             {
-                return Unauthorized(ex.Message);
+                _logger.LogError(ex, "Login error for username: {Username}", request.Username);
+                return StatusCode(500, new { message = "An error occurred during login" });
             }
         }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            // Validate model state
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Registration request validation failed for username: {Username}", request?.Username);
+                return BadRequest(ModelState);
+            }
+
+            // Additional null checks
+            if (string.IsNullOrWhiteSpace(request.Username) || 
+                string.IsNullOrWhiteSpace(request.Email) || 
+                string.IsNullOrWhiteSpace(request.Password))
+            {
+                _logger.LogWarning("Registration request with empty required fields from IP: {IP}", 
+                    HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "Username, email, and password are required" });
+            }
+
+            try
+            {
+                var response = await _authService.RegisterAsync(request);
+                
+                _logger.LogInformation("Registration successful for username: {Username}, UserId: {UserId}", 
+                    request.Username, response.UserId);
+                return CreatedAtAction(nameof(GetUserInfo), new { }, response);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Registration failed for username: {Username}, Email: {Email}, Error: {Error}", 
+                    request.Username, request.Email, ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Registration error for username: {Username}", request.Username);
+                return StatusCode(500, new { message = "An error occurred during registration" });
+            }
+        }
+
         [HttpGet("userinfo")]
         [Authorize]
         public async Task<IActionResult> GetUserInfo()
         {
-            Console.WriteLine("=== GetUserInfo method called ===");
-            Console.WriteLine($"User.Identity.IsAuthenticated: {User.Identity?.IsAuthenticated}");
-            Console.WriteLine($"User.Identity.Name: {User.Identity?.Name}");
-            Console.WriteLine($"Claims count: {User.Claims.Count()}");
+            _logger.LogDebug("GetUserInfo method called for user: {Username}", User.Identity?.Name);
             
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
-            }
-
             try
             {
-                // Lấy userId từ JWT claims (đã set ClaimTypes.NameIdentifier trong Login)
+                // Get userId from JWT claims
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                Console.WriteLine($"UserIdClaim: {userIdClaim}");
-                
-                if (string.IsNullOrEmpty(userIdClaim)) 
-                    return Unauthorized("Invalid token");
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    _logger.LogWarning("GetUserInfo called with invalid token - no NameIdentifier claim");
+                    return Unauthorized(new { message = "Invalid token" });
+                }
 
-                var userId = int.Parse(userIdClaim);
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogWarning("GetUserInfo called with invalid userId claim: {UserIdClaim}", userIdClaim);
+                    return BadRequest(new { message = "Invalid user identifier" });
+                }
+
                 var userResponse = await _authService.GetUserInfoAsync(userId);
                 return Ok(userResponse);
             }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogWarning("GetUserInfo: User not found for claims userId: {UserIdClaim}", 
+                    User.FindFirstValue(ClaimTypes.NameIdentifier));
+                return NotFound(new { message = "User not found" });
+            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in GetUserInfo: {ex.Message}");
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "Error in GetUserInfo for user: {Username}", User.Identity?.Name);
+                return StatusCode(500, new { message = "An error occurred while retrieving user information" });
             }
         }
 
@@ -69,8 +140,13 @@ namespace VLivingAPI.Controllers
         [Authorize]
         public IActionResult TestAuth()
         {
-            Console.WriteLine("=== TestAuth method called ===");
-            return Ok(new { message = "Authentication successful!", user = User.Identity?.Name });
+            _logger.LogDebug("TestAuth method called for user: {Username}", User.Identity?.Name);
+            return Ok(new { 
+                message = "Authentication successful!", 
+                user = User.Identity?.Name,
+                authenticated = User.Identity?.IsAuthenticated,
+                claims = User.Claims.Select(c => new { type = c.Type, value = c.Value })
+            });
         }
     }
 }
