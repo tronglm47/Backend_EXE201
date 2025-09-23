@@ -8,8 +8,16 @@ using Services.Interfaces;
 using Services.Services;
 using System.Text;
 using VLivingAPI.Repositories.Data.Models;
+using EVCS.Repositories.HuyCG.Interfaces;
+using EVCS.Repositories.HuyCG.Basic;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsProduction())
+{
+    builder.Configuration
+        .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true);
+}
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -23,7 +31,22 @@ builder.Services.AddDbContext<VLivingDbContext>(options =>
 // DI cho layers
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+// Generic Repository và UnitOfWork pattern
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Services layer
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPropertyService, PropertyService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
+builder.Services.AddScoped<IAdService, AdService>();
+builder.Services.AddScoped<IAdRequestService, AdRequestService>();
+builder.Services.AddScoped<IActivityService, ActivityService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IRoommateMatchService, RoommateMatchService>();
+builder.Services.AddScoped<IRoommatePreferenceService, RoommatePreferenceService>();
 
 // JWT Authentication
 
@@ -125,6 +148,21 @@ builder.Services.AddSwaggerGen(option =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Ensure database is created
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<VLivingDbContext>();
+        await context.Database.EnsureCreatedAsync();
+        Console.WriteLine("Database ensured created successfully");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Database initialization error: {ex.Message}");
+}
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();

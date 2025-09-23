@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Services.Interfaces;
 using System.Security.Claims;
 using VLivingAPI.RequestsResponses.User;
+using Repositories.Constants;
 
 namespace VLivingAPI.Controllers
 {
@@ -77,6 +78,20 @@ namespace VLivingAPI.Controllers
                 return BadRequest(new { message = "Username, email, and password are required" });
             }
 
+            // Set default role if not provided
+            if (string.IsNullOrWhiteSpace(request.Role))
+            {
+                request.Role = UserRoleConstants.UserRole;
+                _logger.LogDebug("Setting default role '{Role}' for registration: {Username}", request.Role, request.Username);
+            }
+
+            // Validate role
+            if (!UserRoleConstants.IsValidRole(request.Role))
+            {
+                _logger.LogWarning("Invalid role '{Role}' provided for registration: {Username}", request.Role, request.Username);
+                return BadRequest(new { message = $"Invalid role. Valid roles are: {string.Join(", ", UserRoleConstants.GetAllRoles())}" });
+            }
+
             try
             {
                 var response = await _authService.RegisterAsync(request);
@@ -95,6 +110,59 @@ namespace VLivingAPI.Controllers
             {
                 _logger.LogError(ex, "Registration error for username: {Username}", request.Username);
                 return StatusCode(500, new { message = "An error occurred during registration" });
+            }
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            try
+            {
+                var username = User.Identity?.Name;
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                _logger.LogInformation("User logout: {Username} (ID: {UserId})", username, userId);
+                
+                // In a stateless JWT implementation, logout is mainly client-side
+                // The client should remove the token from storage
+                // For additional security, you could implement a token blacklist
+                
+                return Ok(new { message = "Logged out successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during logout for user: {Username}", User.Identity?.Name);
+                return StatusCode(500, new { message = "An error occurred during logout" });
+            }
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.Token))
+            {
+                _logger.LogWarning("Refresh token request with empty token from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "Token is required" });
+            }
+
+            try
+            {
+                var newToken = await _authService.RefreshTokenAsync(request.Token);
+                var response = new LoginResponse { Token = newToken };
+                
+                _logger.LogInformation("Token refreshed successfully");
+                return Ok(response);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning("Token refresh failed: {Error}, IP: {IP}", ex.Message, HttpContext.Connection.RemoteIpAddress);
+                return Unauthorized(new { message = "Invalid or expired token" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during token refresh");
+                return StatusCode(500, new { message = "An error occurred during token refresh" });
             }
         }
 
@@ -134,19 +202,6 @@ namespace VLivingAPI.Controllers
                 _logger.LogError(ex, "Error in GetUserInfo for user: {Username}", User.Identity?.Name);
                 return StatusCode(500, new { message = "An error occurred while retrieving user information" });
             }
-        }
-
-        [HttpGet("test")]
-        [Authorize]
-        public IActionResult TestAuth()
-        {
-            _logger.LogDebug("TestAuth method called for user: {Username}", User.Identity?.Name);
-            return Ok(new { 
-                message = "Authentication successful!", 
-                user = User.Identity?.Name,
-                authenticated = User.Identity?.IsAuthenticated,
-                claims = User.Claims.Select(c => new { type = c.Type, value = c.Value })
-            });
         }
     }
 }

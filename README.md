@@ -1,8 +1,53 @@
-# VLiving API - Backend
+# VLiving API - Backend 🏠
 
 ## 📋 **Project Overview**
 
-VLiving API là backend service cho ứng dụng VLiving, cung cấp các API endpoints cho authentication, user management và các tính năng khác.
+VLiving API là backend service cho ứng dụng VLiving, cung cấp các API endpoints cho authentication, user management, property management, và các tính năng roommate matching.
+
+## 🔐 **Security Features (UPDATED)**
+- ✅ JWT Authentication & Authorization
+- ✅ Role-based access control với 10 user roles khác nhau
+- ✅ Secured API endpoints với proper authorization
+- ✅ Sensitive data protection (connection strings, API keys)
+- ✅ Enhanced Auth flow: Login, Register, Logout, Token Refresh
+
+## 🎯 **User Roles**
+- `admin` - System administrator
+- `user` - Regular user (default for registration)
+- `property_owner` - Property owner
+- `landlord` - Landlord  
+- `tenant` - Tenant
+- `advertiser` - Advertiser
+- `moderator` - Content moderator
+- `premium_user` - Premium subscriber
+- `basic_user` - Basic subscriber
+- `renter` - Property renter
+
+## 🔧 **Setup Instructions**
+
+### 1. Configuration Setup
+Copy `VLivingAPI/appsettings.Example.json` to `VLivingAPI/appsettings.json` và cập nhật:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "YOUR_DATABASE_CONNECTION_STRING"
+  },
+  "JWT": {
+    "Key": "YOUR_JWT_SECRET_KEY_MINIMUM_32_CHARACTERS",
+    "Issuer": "VLivingAPI", 
+    "Audience": "VLivingApp",
+    "ExpiryInMinutes": 60
+  }
+}
+```
+
+### 2. Build & Run
+```bash
+dotnet restore
+dotnet build
+dotnet run --project VLivingAPI
+```
 
 ## 🏗️ **Architecture**
 

@@ -8,5 +8,7 @@ namespace Services.Interfaces
         Task<string> LoginAsync(string username, string password);
         Task<UserResponse> GetUserInfoAsync(int userId);
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);
+        Task<string> RefreshTokenAsync(string token);
+        Task<bool> ValidateTokenAsync(string token);
     }
 }
