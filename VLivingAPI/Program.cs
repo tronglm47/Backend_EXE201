@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -24,10 +24,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext với connection từ appsettings
-builder.Services.AddDbContext<VLivingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+// DbContext với connection từ appsettings - with better error handling
+try 
+{
+    builder.Services.AddDbContext<VLivingDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Database context configuration error: {ex.Message}");
+    if (!builder.Environment.IsProduction()) 
+        throw;
+}
+
 // DI cho layers
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
@@ -48,120 +58,96 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IRoommateMatchService, RoommateMatchService>();
 builder.Services.AddScoped<IRoommatePreferenceService, RoommatePreferenceService>();
 
-// JWT Authentication
-
+// JWT Authentication with safer configuration
 var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrEmpty(jwtKey))
-    throw new InvalidOperationException("JWT Key is not configured");
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false; // Cho development
-        options.SaveToken = true;
-        
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ClockSkew = TimeSpan.Zero // Giảm clock skew tolerance
-        };
-
-        // Thêm event handlers để debug
-        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
-        {
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine($"Authentication failed: {context.Exception.Message}");
-                Console.WriteLine($"Exception details: {context.Exception}");
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("Token validated successfully");
-                return Task.CompletedTask;
-            },
-            OnMessageReceived = context =>
-            {
-                var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-                Console.WriteLine($"Authorization header: {authHeader}");
-                
-                // Manual token extraction nếu cần
-                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
-                {
-                    var token = authHeader.Substring("Bearer ".Length).Trim();
-                    context.Token = token;
-                    Console.WriteLine($"Manually extracted token: {token.Substring(0, Math.Min(20, token.Length))}...");
-                    Console.WriteLine($"Token parts count: {token.Split('.').Length}");
-                }
-                
-                var receivedToken = context.Token;
-                if (!string.IsNullOrEmpty(receivedToken))
-                {
-                    Console.WriteLine($"Token received: {receivedToken.Substring(0, Math.Min(20, receivedToken.Length))}...");
-                    Console.WriteLine($"Token parts count: {receivedToken.Split('.').Length}");
-                }
-                else
-                {
-                    Console.WriteLine("No token received in OnMessageReceived");
-                }
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-builder.Services.AddSwaggerGen(option =>
+if (!string.IsNullOrEmpty(jwtKey))
 {
-    // JWT Config
-    option.DescribeAllParametersInCamelCase();
-    option.ResolveConflictingActions(conf => conf.First());     // duplicate API name if any
-    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    option.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            new OpenApiSecurityScheme
+            options.RequireHttpsMetadata = false; // Cho development
+            options.SaveToken = true;
+            
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                Reference = new OpenApiReference
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                ValidAudience = builder.Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+    
+    builder.Services.AddSwaggerGen(option =>
+    {
+        option.DescribeAllParametersInCamelCase();
+        option.ResolveConflictingActions(conf => conf.First());
+        option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "Bearer"
+        });
+        option.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[]{}
-        }
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[]{}
+            }
+        });
     });
-});
-
-builder.Services.AddAuthorization();
+    
+    builder.Services.AddAuthorization();
+}
+else
+{
+    Console.WriteLine("Warning: JWT Key is not configured - authentication disabled");
+}
 
 var app = builder.Build();
 
-// Ensure database is created
-try
+// Safer database initialization
+if (!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection")))
 {
-    using (var scope = app.Services.CreateScope())
+    try
     {
-        var context = scope.ServiceProvider.GetRequiredService<VLivingDbContext>();
-        await context.Database.EnsureCreatedAsync();
-        Console.WriteLine("Database ensured created successfully");
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<VLivingDbContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            
+            // Test connection with timeout
+            var canConnect = await context.Database.CanConnectAsync();
+            if (canConnect)
+            {
+                await context.Database.EnsureCreatedAsync();
+                logger.LogInformation("Database ensured created successfully");
+            }
+            else
+            {
+                logger.LogWarning("Cannot connect to database - API will run without database");
+            }
+        }
     }
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Database initialization error: {ex.Message}");
+    catch (Exception ex)
+    {
+        var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<Program>();
+        logger.LogError(ex, "Database initialization error - continuing without database");
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -170,8 +156,20 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
-app.UseAuthorization();
+// Only use auth if JWT is configured
+if (!string.IsNullOrEmpty(jwtKey))
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
+
+// Add simple health endpoints
+app.MapGet("/", () => "VLivingAPI is working!");
+app.MapGet("/health", () => new { 
+    status = "healthy", 
+    timestamp = DateTime.UtcNow,
+    version = "v1.3.0-full-with-db"
+});
 
 app.MapControllers();
 

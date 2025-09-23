@@ -14,6 +14,18 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Configuration files with sensitive information
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.Development.json
+appsettings.*.json
+!appsettings.Example.json
+
+# Connection strings and secrets
+connectionstrings.json
+secrets.json
+*.secrets.json
+
 # Deployment documentation (contains sensitive info)
 deployment-docs/
 *deployment*.zip
@@ -23,6 +35,7 @@ eb-config.json
 # AWS and deployment files
 .ebextensions/
 publish/
+publish-*/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

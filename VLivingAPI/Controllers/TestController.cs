@@ -25,7 +25,8 @@ namespace VLivingAPI.Controllers
                 return Ok(new { 
                     message = "API is working!", 
                     timestamp = DateTime.UtcNow,
-                    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                    environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                    version = "v1.3.0-full-with-db"
                 });
             }
             catch (Exception ex)
@@ -41,19 +42,28 @@ namespace VLivingAPI.Controllers
             _logger.LogInformation("TestDatabase method called from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
             try
             {
+                // Safely get database context
+                var context = HttpContext.RequestServices.GetService<VLivingDbContext>();
+                if (context == null)
+                {
+                    return Ok(new { 
+                        message = "Database context not configured",
+                        timestamp = DateTime.UtcNow,
+                        canConnect = false
+                    });
+                }
+                
                 // Test actual database connection
                 var connectionString = HttpContext.RequestServices
                     .GetRequiredService<IConfiguration>()
                     .GetConnectionString("DefaultConnection");
                 
-                using var context = HttpContext.RequestServices.GetRequiredService<VLivingDbContext>();
-                
                 // Try to query database
                 var canConnect = await context.Database.CanConnectAsync();
-                var userCount = await context.Users.CountAsync();
+                var userCount = canConnect ? await context.Users.CountAsync() : -1;
                 
                 return Ok(new { 
-                    message = "Database connection test successful",
+                    message = canConnect ? "Database connection test successful" : "Database connection failed",
                     timestamp = DateTime.UtcNow,
                     canConnect = canConnect,
                     userCount = userCount,
@@ -81,6 +91,17 @@ namespace VLivingAPI.Controllers
                 user = User.Identity?.Name,
                 authenticated = User.Identity?.IsAuthenticated,
                 claims = User.Claims.Select(c => new { type = c.Type, value = c.Value })
+            });
+        }
+
+        [HttpGet("health")]
+        public IActionResult HealthCheck()
+        {
+            return Ok(new { 
+                status = "healthy", 
+                timestamp = DateTime.UtcNow,
+                message = "Full API with database support",
+                version = "v1.3.0-full-with-db"
             });
         }
     }
