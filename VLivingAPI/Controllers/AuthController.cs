@@ -39,11 +39,10 @@ namespace VLivingAPI.Controllers
 
             try
             {
-                var token = await _authService.LoginAsync(request.Username.Trim(), request.Password);
-                var response = new LoginResponse { Token = token };
+                var loginResponse = await _authService.LoginAsync(request.Username.Trim(), request.Password);
                 
                 _logger.LogInformation("Login successful for username: {Username}", request.Username);
-                return Ok(response);
+                return Ok(loginResponse);
             }
             catch (UnauthorizedAccessException)
             {
@@ -76,6 +75,18 @@ namespace VLivingAPI.Controllers
                 _logger.LogWarning("Registration request with empty required fields from IP: {IP}", 
                     HttpContext.Connection.RemoteIpAddress);
                 return BadRequest(new { message = "Username, email, and password are required" });
+            }
+
+            // Password strength validation
+            if (request.Password.Length < 6)
+            {
+                return BadRequest(new { message = "Password must be at least 6 characters long" });
+            }
+
+            // Optional: Add password complexity requirement
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.Password, @"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]"))
+            {
+                return BadRequest(new { message = "Password must contain at least one letter, one number, and one special character" });
             }
 
             // Set default role if not provided
@@ -148,11 +159,10 @@ namespace VLivingAPI.Controllers
 
             try
             {
-                var newToken = await _authService.RefreshTokenAsync(request.Token);
-                var response = new LoginResponse { Token = newToken };
+                var refreshResponse = await _authService.RefreshTokenAsync(request.Token);
                 
                 _logger.LogInformation("Token refreshed successfully");
-                return Ok(response);
+                return Ok(refreshResponse);
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -163,6 +173,167 @@ namespace VLivingAPI.Controllers
             {
                 _logger.LogError(ex, "Error during token refresh");
                 return StatusCode(500, new { message = "An error occurred during token refresh" });
+            }
+        }
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] EmailVerificationRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Email verification request validation failed");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Token))
+            {
+                _logger.LogWarning("Email verification request with empty verification code from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "6-digit verification code is required" });
+            }
+
+            try
+            {
+                var isVerified = await _authService.VerifyEmailAsync(request.Token);
+                if (isVerified)
+                {
+                    _logger.LogInformation("Email verified successfully");
+                    return Ok(new { message = "Email verified successfully" });
+                }
+                else
+                {
+                    _logger.LogWarning("Email verification failed with verification code");
+                    return BadRequest(new { message = "Invalid or expired verification code. Please check your email for the correct 6-digit code." });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during email verification");
+                return StatusCode(500, new { message = "An error occurred during email verification" });
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Forgot password request validation failed");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                _logger.LogWarning("Forgot password request with empty email from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "Email is required" });
+            }
+
+            try
+            {
+                var isSuccess = await _authService.SendPasswordResetAsync(request.Email);
+                if (isSuccess)
+                {
+                    _logger.LogInformation("Password reset email sent for: {Email}", request.Email);
+                    return Ok(new { message = "If your email exists in our system, you will receive a password reset link" });
+                }
+                else
+                {
+                    _logger.LogWarning("Password reset failed for email: {Email}", request.Email);
+                    return StatusCode(500, new { message = "An error occurred while processing your request" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during forgot password for email: {Email}", request.Email);
+                return StatusCode(500, new { message = "An error occurred while processing your request" });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Reset password request validation failed");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                _logger.LogWarning("Reset password request with empty fields from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "Token and new password are required" });
+            }
+
+            // Additional password strength validation
+            if (request.NewPassword.Length < 6)
+            {
+                return BadRequest(new { message = "Password must be at least 6 characters long" });
+            }
+
+            // Optional: Add more password strength requirements
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.NewPassword, @"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]"))
+            {
+                return BadRequest(new { message = "Password must contain at least one letter, one number, and one special character" });
+            }
+
+            try
+            {
+                var isSuccess = await _authService.ResetPasswordAsync(request.Token, request.NewPassword);
+                if (isSuccess)
+                {
+                    _logger.LogInformation("Password reset successfully");
+                    return Ok(new { message = "Password has been reset successfully" });
+                }
+                else
+                {
+                    _logger.LogWarning("Password reset failed with token");
+                    return BadRequest(new { message = "Invalid or expired reset token" });
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Password reset validation failed: {Error}", ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during password reset");
+                return StatusCode(500, new { message = "An error occurred during password reset" });
+            }
+        }
+
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendVerification([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Resend verification request validation failed");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                _logger.LogWarning("Resend verification request with empty email from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
+                return BadRequest(new { message = "Email is required" });
+            }
+
+            try
+            {
+                var isSuccess = await _authService.ResendVerificationEmailAsync(request.Email);
+                if (isSuccess)
+                {
+                    _logger.LogInformation("Verification email resent for: {Email}", request.Email);
+                    return Ok(new { message = "Verification email has been sent" });
+                }
+                else
+                {
+                    _logger.LogWarning("Resend verification failed for email: {Email}", request.Email);
+                    return BadRequest(new { message = "Email not found or already verified" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during resend verification for email: {Email}", request.Email);
+                return StatusCode(500, new { message = "An error occurred while processing your request" });
             }
         }
 

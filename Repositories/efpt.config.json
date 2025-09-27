@@ -4,7 +4,7 @@
    "ContextNamespace": null,
    "FilterSchemas": false,
    "IncludeConnectionString": true,
-   "MinimumProductVersion": "2.6.1130",
+   "MinimumProductVersion": "2.6.1166",
    "ModelNamespace": null,
    "OutputContextPath": null,
    "OutputPath": "Models",
@@ -32,6 +32,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[EmailVerificationTokens]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Locations]",
          "ObjectType": 0
       },
@@ -44,6 +48,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[PasswordResetTokens]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Payments]",
          "ObjectType": 0
       },
@@ -53,6 +61,10 @@
       },
       {
          "Name": "[dbo].[Properties]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[RefreshTokens]",
          "ObjectType": 0
       },
       {

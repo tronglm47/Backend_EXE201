@@ -8,23 +8,39 @@ using System.Text;
 using VLivingAPI.RequestsResponses.User;
 using Microsoft.Extensions.Logging;
 using Repositories.Constants;
+using System.Security.Cryptography;
 
 namespace Services.Services
 {
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepo;
+        private readonly IEmailVerificationRepository _emailVerificationRepo;
+        private readonly IPasswordResetRepository _passwordResetRepo;
+        private readonly IRefreshTokenRepository _refreshTokenRepo;
+        private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IUserRepository userRepo, IConfiguration configuration, ILogger<AuthService> logger)
+        public AuthService(
+            IUserRepository userRepo, 
+            IEmailVerificationRepository emailVerificationRepo,
+            IPasswordResetRepository passwordResetRepo,
+            IRefreshTokenRepository refreshTokenRepo,
+            IEmailService emailService,
+            IConfiguration configuration, 
+            ILogger<AuthService> logger)
         {
             _userRepo = userRepo;
+            _emailVerificationRepo = emailVerificationRepo;
+            _passwordResetRepo = passwordResetRepo;
+            _refreshTokenRepo = refreshTokenRepo;
+            _emailService = emailService;
             _configuration = configuration;
             _logger = logger;
         }
 
-        public async Task<string> LoginAsync(string username, string password)
+        public async Task<LoginResponse> LoginAsync(string username, string password)
         {
             _logger.LogInformation("Login attempt for username: {Username}", username);
             
@@ -44,9 +60,33 @@ namespace Services.Services
                     throw new UnauthorizedAccessException("Invalid credentials");
                 }
 
+                // Check if email is verified
+                if (user.IsEmailVerified != true)
+                {
+                    _logger.LogWarning("Login failed: Email not verified for username: {Username}", username);
+                    throw new UnauthorizedAccessException("Please verify your email before logging in");
+                }
+
+                // Update last login
+                await _userRepo.UpdateLastLoginAsync(user.UserId);
+
+                // Generate tokens
+                var accessToken = GenerateJwtToken(user);
+                var refreshToken = GenerateRefreshToken();
+                var refreshTokenExpiry = DateTime.UtcNow.AddDays(30);
+
+                // Save refresh token to database
+                await _refreshTokenRepo.CreateTokenAsync(user.UserId, refreshToken, refreshTokenExpiry);
+
                 _logger.LogInformation("Login successful for username: {Username}", username);
 
-                return GenerateJwtToken(user);
+                return new LoginResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    ExpiresAt = DateTime.UtcNow.AddHours(1),
+                    IsEmailVerified = user.IsEmailVerified ?? false
+                };
             }
             catch (UnauthorizedAccessException)
             {
@@ -126,11 +166,20 @@ namespace Services.Services
                     PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim(),
                     ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim(),
                     Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim(),
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IsEmailVerified = false
                 };
 
                 // Save user to database
                 var createdUser = await _userRepo.CreateUserAsync(newUser);
+
+                // Generate email verification token
+                var verificationToken = GenerateSecureToken();
+                var tokenExpiry = DateTime.UtcNow.AddHours(24);
+                await _emailVerificationRepo.CreateTokenAsync(createdUser.UserId, verificationToken, tokenExpiry);
+
+                // Send verification email
+                await _emailService.SendEmailVerificationAsync(createdUser.Email, createdUser.Username, verificationToken);
 
                 _logger.LogInformation("User registered successfully: {Username}, UserId: {UserId}", 
                     createdUser.Username, createdUser.UserId);
@@ -156,40 +205,48 @@ namespace Services.Services
             }
         }
 
-        public async Task<string> RefreshTokenAsync(string token)
+        public async Task<LoginResponse> RefreshTokenAsync(string refreshToken)
         {
             try
             {
                 _logger.LogInformation("Token refresh attempt");
 
-                // Validate the current token (even if expired)
-                var principal = GetPrincipalFromExpiredToken(token);
-                if (principal == null)
+                // Get and validate refresh token from database
+                var storedToken = await _refreshTokenRepo.GetValidTokenAsync(refreshToken);
+                if (storedToken == null)
                 {
-                    _logger.LogWarning("Invalid token provided for refresh");
-                    throw new UnauthorizedAccessException("Invalid token");
+                    _logger.LogWarning("Invalid or expired refresh token provided");
+                    throw new UnauthorizedAccessException("Invalid refresh token");
                 }
 
-                var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    _logger.LogWarning("Invalid user ID in token for refresh");
-                    throw new UnauthorizedAccessException("Invalid token claims");
-                }
-
-                // Get user from database to ensure they still exist
-                var user = await _userRepo.GetByIdAsync(userId);
+                // Get user from database
+                var user = await _userRepo.GetByIdAsync(storedToken.UserId);
                 if (user == null)
                 {
-                    _logger.LogWarning("User not found for token refresh, userId: {UserId}", userId);
+                    _logger.LogWarning("User not found for token refresh, userId: {UserId}", storedToken.UserId);
                     throw new UnauthorizedAccessException("User not found");
                 }
 
-                // Generate new token
-                var newToken = GenerateJwtToken(user);
+                // Revoke the old refresh token
+                await _refreshTokenRepo.RevokeTokenAsync(storedToken.RefreshTokenId);
+
+                // Generate new tokens
+                var newAccessToken = GenerateJwtToken(user);
+                var newRefreshToken = GenerateRefreshToken();
+                var newRefreshTokenExpiry = DateTime.UtcNow.AddDays(30);
+
+                // Save new refresh token to database
+                await _refreshTokenRepo.CreateTokenAsync(user.UserId, newRefreshToken, newRefreshTokenExpiry);
                 
                 _logger.LogInformation("Token refreshed successfully for user: {Username}", user.Username);
-                return newToken;
+                
+                return new LoginResponse
+                {
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    ExpiresAt = DateTime.UtcNow.AddHours(1),
+                    IsEmailVerified = user.IsEmailVerified ?? false
+                };
             }
             catch (UnauthorizedAccessException)
             {
@@ -199,6 +256,202 @@ namespace Services.Services
             {
                 _logger.LogError(ex, "Error during token refresh");
                 throw new Exception("An error occurred during token refresh");
+            }
+        }
+
+        public async Task<bool> VerifyEmailAsync(string token)
+        {
+            try
+            {
+                _logger.LogInformation("Email verification attempt");
+
+                // Get and validate verification token
+                var storedToken = await _emailVerificationRepo.GetValidTokenAsync(token);
+                if (storedToken == null)
+                {
+                    _logger.LogWarning("Invalid or expired verification token provided");
+                    
+                    // Check if this token was already used (user already verified)
+                    var anyToken = await _emailVerificationRepo.GetTokenByValueAsync(token);
+                    if (anyToken != null && (anyToken.IsUsed == true))
+                    {
+                        // Check if user is already verified
+                        var existingUser = await _userRepo.GetByIdAsync(anyToken.UserId);
+                        if (existingUser?.IsEmailVerified == true)
+                        {
+                            _logger.LogInformation("User already verified with this token");
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                }
+
+                // Mark token as used
+                await _emailVerificationRepo.MarkTokenAsUsedAsync(storedToken.TokenId);
+                _logger.LogInformation("Token marked as used for TokenId: {TokenId}", storedToken.TokenId);
+
+                // Update user email verification status
+                _logger.LogInformation("About to update email verification status for UserId: {UserId}", storedToken.UserId);
+                await _userRepo.UpdateEmailVerificationStatusAsync(storedToken.UserId, true);
+                _logger.LogInformation("Email verification status update completed for UserId: {UserId}", storedToken.UserId);
+
+                // Send welcome email
+                var user = await _userRepo.GetByIdAsync(storedToken.UserId);
+                if (user != null)
+                {
+                    await _emailService.SendWelcomeEmailAsync(user.Email, user.Username);
+                }
+
+                _logger.LogInformation("Email verified successfully for user: {UserId}", storedToken.UserId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during email verification");
+                return false;
+            }
+        }
+
+        public async Task<bool> SendPasswordResetAsync(string email)
+        {
+            try
+            {
+                _logger.LogInformation("Password reset request for email: {Email}", email);
+
+                // Check if user exists
+                var user = await _userRepo.GetByEmailAsync(email);
+                if (user == null)
+                {
+                    // For security, we return true even if user doesn't exist
+                    _logger.LogWarning("Password reset requested for non-existent email: {Email}", email);
+                    return true;
+                }
+
+                // Generate password reset token (use 6-digit code like email verification)
+                var resetToken = GenerateSecureToken();
+                var tokenExpiry = DateTime.UtcNow.AddHours(1);
+                await _passwordResetRepo.CreateTokenAsync(user.UserId, resetToken, tokenExpiry);
+
+                // Send password reset email
+                await _emailService.SendPasswordResetAsync(user.Email, user.Username, resetToken);
+
+                _logger.LogInformation("Password reset email sent for user: {Username}", user.Username);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during password reset request for email: {Email}", email);
+                return false;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            try
+            {
+                _logger.LogInformation("Password reset attempt");
+
+                // Get and validate reset token
+                var storedToken = await _passwordResetRepo.GetValidTokenAsync(token);
+                if (storedToken == null)
+                {
+                    _logger.LogWarning("Invalid or expired password reset token provided");
+                    return false;
+                }
+
+                // Get current password for validation
+                var currentPassword = await _userRepo.GetPasswordByUserIdAsync(storedToken.UserId);
+                if (string.IsNullOrEmpty(currentPassword))
+                {
+                    _logger.LogWarning("User not found for password reset. UserId: {UserId}", storedToken.UserId);
+                    return false;
+                }
+
+                // Validate new password is different from current password
+                if (currentPassword == newPassword)
+                {
+                    _logger.LogWarning("New password is same as current password for UserId: {UserId}", storedToken.UserId);
+                    throw new InvalidOperationException("New password must be different from your current password");
+                }
+
+                // Mark token as used (this prevents reuse)
+                await _passwordResetRepo.MarkTokenAsUsedAsync(storedToken.TokenId);
+                _logger.LogInformation("Password reset token marked as used for TokenId: {TokenId}", storedToken.TokenId);
+
+                // Update user password
+                await _userRepo.UpdatePasswordAsync(storedToken.UserId, newPassword);
+                _logger.LogInformation("Password updated successfully for UserId: {UserId}", storedToken.UserId);
+
+                // Revoke all refresh tokens for security (force re-login)
+                await _refreshTokenRepo.RevokeAllUserTokensAsync(storedToken.UserId);
+                _logger.LogInformation("All refresh tokens revoked for security for UserId: {UserId}", storedToken.UserId);
+
+                // Optional: Delete the used token for extra security
+                try
+                {
+                    await _passwordResetRepo.DeleteExpiredTokensAsync();
+                    _logger.LogInformation("Expired and used password reset tokens cleaned up");
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logger.LogWarning(cleanupEx, "Failed to cleanup expired tokens, but password reset was successful");
+                    // Don't fail the main operation due to cleanup issues
+                }
+
+                _logger.LogInformation("Password reset completed successfully for UserId: {UserId}", storedToken.UserId);
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                // Re-throw validation exceptions to be handled by controller
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during password reset");
+                return false;
+            }
+        }
+
+        public async Task<bool> ResendVerificationEmailAsync(string email)
+        {
+            try
+            {
+                _logger.LogInformation("Resend verification email request for: {Email}", email);
+
+                // Check if user exists
+                var user = await _userRepo.GetByEmailAsync(email);
+                if (user == null)
+                {
+                    _logger.LogWarning("Resend verification requested for non-existent email: {Email}", email);
+                    return false;
+                }
+
+                _logger.LogInformation("User found: {Username}, IsEmailVerified: {IsVerified}", user.Username, user.IsEmailVerified);
+
+                // Check if already verified
+                if (user.IsEmailVerified == true)
+                {
+                    _logger.LogWarning("Resend verification requested for already verified email: {Email}", email);
+                    return false;
+                }
+
+                // Generate new verification token
+                var verificationToken = GenerateSecureToken();
+                var tokenExpiry = DateTime.UtcNow.AddHours(24);
+                await _emailVerificationRepo.CreateTokenAsync(user.UserId, verificationToken, tokenExpiry);
+
+                // Send verification email
+                await _emailService.SendEmailVerificationAsync(user.Email, user.Username, verificationToken);
+
+                _logger.LogInformation("Verification email resent for user: {Username}", user.Username);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during resend verification email for: {Email}", email);
+                return false;
             }
         }
 
@@ -305,6 +558,34 @@ namespace Services.Services
             {
                 return null;
             }
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            return Convert.ToBase64String(randomBytes);
+        }
+
+        private string GenerateSecureToken()
+        {
+            // Generate 6-digit verification code for both email verification and password reset
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
+        }
+
+        private string GenerateSecureTokenLong()
+        {
+            // Keep this method for future use (currently not used - all tokens are 6-digit)
+            var randomBytes = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            return Convert.ToBase64String(randomBytes).Replace("/", "_").Replace("+", "-").Replace("=", "");
         }
     }
 }

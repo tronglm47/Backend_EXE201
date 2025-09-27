@@ -1,0 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace VLivingAPI.RequestsResponses.User
+{
+    public class EmailVerificationRequest
+    {
+        [Required(ErrorMessage = "Verification code is required")]
+        [StringLength(6, MinimumLength = 6, ErrorMessage = "Verification code must be exactly 6 digits")]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "Verification code must be 6 digits")]
+        public required string Token { get; set; }
+    }
+}

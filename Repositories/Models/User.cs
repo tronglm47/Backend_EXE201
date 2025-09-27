@@ -9,10 +9,11 @@ using Microsoft.EntityFrameworkCore;
 namespace VLivingAPI.Repositories.Data.Models;
 
 [Index("Email", Name = "IDX_Users_Email")]
+[Index("IsEmailVerified", Name = "IDX_Users_IsEmailVerified")]
 [Index("Role", Name = "IDX_Users_Role")]
 [Index("SubscriptionPlanId", Name = "IDX_Users_SubscriptionPlanID")]
-[Index("Username", Name = "UQ__Users__536C85E49C37EA50", IsUnique = true)]
-[Index("Email", Name = "UQ__Users__A9D105345868EC48", IsUnique = true)]
+[Index("Username", Name = "UQ__Users__536C85E45364CAA7", IsUnique = true)]
+[Index("Email", Name = "UQ__Users__A9D105341F29CD20", IsUnique = true)]
 public partial class User
 {
     [Key]
@@ -53,6 +54,8 @@ public partial class User
 
     public bool? IsAdvertiserApproved { get; set; }
 
+    public bool? IsEmailVerified { get; set; }
+
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
@@ -71,6 +74,9 @@ public partial class User
     [InverseProperty("User")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
+    [InverseProperty("User")]
+    public virtual ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
+
     [InverseProperty("Receiver")]
     public virtual ICollection<Message> MessageReceivers { get; set; } = new List<Message>();
 
@@ -81,6 +87,9 @@ public partial class User
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     [InverseProperty("User")]
+    public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
+
+    [InverseProperty("User")]
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
     [InverseProperty("User")]
@@ -88,6 +97,9 @@ public partial class User
 
     [InverseProperty("Owner")]
     public virtual ICollection<Property> Properties { get; set; } = new List<Property>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     [InverseProperty("UserId1Navigation")]
     public virtual ICollection<RoommateMatch> RoommateMatchUserId1Navigations { get; set; } = new List<RoommateMatch>();

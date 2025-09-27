@@ -6,6 +6,7 @@ using Repositories.Interfaces;
 using Repositories.Repositories;
 using Services.Interfaces;
 using Services.Services;
+using Services.Models;
 using System.Text;
 using VLivingAPI.Repositories.Data.Models;
 using EVCS.Repositories.HuyCG.Interfaces;
@@ -24,6 +25,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure EmailSettings
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
 // DbContext với connection từ appsettings - with better error handling
 try 
 {
@@ -40,6 +44,9 @@ catch (Exception ex)
 
 // DI cho layers
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
+builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 // Generic Repository và UnitOfWork pattern
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -47,6 +54,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Services layer
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IPostService, PostService>();
@@ -57,6 +65,9 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IRoommateMatchService, RoommateMatchService>();
 builder.Services.AddScoped<IRoommatePreferenceService, RoommatePreferenceService>();
+
+// Background Services
+builder.Services.AddHostedService<TokenCleanupService>();
 
 // JWT Authentication with safer configuration
 var jwtKey = builder.Configuration["Jwt:Key"];

@@ -7,6 +7,7 @@ namespace VLivingAPI.RequestsResponses.User
         public required string Email { get; set; }
         public required string Role { get; set; }
         public string? FullName { get; set; }
-        public string Message { get; set; } = "User registered successfully";
+        public string Message { get; set; } = "User registered successfully. Please check your email to verify your account.";
+        public bool RequiresEmailVerification { get; set; } = true;
     }
 }

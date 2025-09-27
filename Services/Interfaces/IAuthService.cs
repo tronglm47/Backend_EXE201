@@ -5,10 +5,16 @@ namespace Services.Interfaces
 {
     public interface IAuthService
     {
-        Task<string> LoginAsync(string username, string password);
+        Task<LoginResponse> LoginAsync(string username, string password);
         Task<UserResponse> GetUserInfoAsync(int userId);
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);
-        Task<string> RefreshTokenAsync(string token);
+        Task<LoginResponse> RefreshTokenAsync(string refreshToken);
         Task<bool> ValidateTokenAsync(string token);
+
+        // New methods for authentication improvements
+        Task<bool> VerifyEmailAsync(string token);
+        Task<bool> SendPasswordResetAsync(string email);
+        Task<bool> ResetPasswordAsync(string token, string newPassword);
+        Task<bool> ResendVerificationEmailAsync(string email);
     }
 }

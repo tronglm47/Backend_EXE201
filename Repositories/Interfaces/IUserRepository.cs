@@ -11,5 +11,11 @@ namespace Repositories.Interfaces
         Task<bool> UsernameExistsAsync(string username);
         Task<bool> EmailExistsAsync(string email);
         Task<User> CreateUserAsync(User user);
+        
+        // New methods for authentication improvements
+        Task UpdateEmailVerificationStatusAsync(int userId, bool isVerified);
+        Task UpdatePasswordAsync(int userId, string newPassword);
+        Task UpdateLastLoginAsync(int userId);
+        Task<string> GetPasswordByUserIdAsync(int userId);
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VLivingAPI.Repositories.Data.Models;
 
-[Index("UserId", Name = "UQ__Roommate__1788CCADC9C5AE66", IsUnique = true)]
+[Index("UserId", Name = "UQ__Roommate__1788CCAD66D6AFB2", IsUnique = true)]
 public partial class RoommatePreference
 {
     [Key]

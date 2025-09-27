@@ -36,6 +36,18 @@ eb-config.json
 .ebextensions/
 publish/
 publish-*/
+publish-full/
+publish-minimal/
+publish-filtered/
+
+# PowerShell deployment scripts (may contain sensitive info)
+deploy.ps1
+test-*.ps1
+debug-*.ps1
+
+# Deployment guides with sensitive URLs/configs
+DEPLOYMENT-README.md
+DEPLOYMENT-GUIDE-LATEST.md
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
