@@ -28,6 +28,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[Amenities]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Bookings]",
          "ObjectType": 0
       },
@@ -56,11 +60,27 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[PostAmenities]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostReviews]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Posts]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Properties]",
+         "Name": "[dbo].[PostTypes]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PropertyForms]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PropertyTypes]",
          "ObjectType": 0
       },
       {

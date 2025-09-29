@@ -9,7 +9,12 @@ using Microsoft.EntityFrameworkCore;
 namespace VLivingAPI.Repositories.Data.Models;
 
 [Index("CreatedAt", Name = "IDX_Posts_CreatedAt")]
-[Index("Type", Name = "IDX_Posts_Type")]
+[Index("LocationId", Name = "IDX_Posts_LocationID")]
+[Index("PostTypeId", Name = "IDX_Posts_PostTypeID")]
+[Index("Price", Name = "IDX_Posts_Price")]
+[Index("PropertyFormId", Name = "IDX_Posts_PropertyFormID")]
+[Index("PropertyTypeId", Name = "IDX_Posts_PropertyTypeID")]
+[Index("Status", Name = "IDX_Posts_Status")]
 public partial class Post
 {
     [Key]
@@ -19,12 +24,17 @@ public partial class Post
     [Column("UserID")]
     public int UserId { get; set; }
 
-    [Column("PropertyID")]
-    public int? PropertyId { get; set; }
+    [Column("PostTypeID")]
+    public int PostTypeId { get; set; }
 
-    [Required]
-    [StringLength(20)]
-    public string Type { get; set; }
+    [Column("PropertyTypeID")]
+    public int PropertyTypeId { get; set; }
+
+    [Column("PropertyFormID")]
+    public int PropertyFormId { get; set; }
+
+    [Column("LocationID")]
+    public int LocationId { get; set; }
 
     [Required]
     [StringLength(200)]
@@ -34,6 +44,12 @@ public partial class Post
 
     public string Images { get; set; }
 
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? Price { get; set; }
+
+    [StringLength(20)]
+    public string Status { get; set; }
+
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
@@ -42,9 +58,27 @@ public partial class Post
     [InverseProperty("Post")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    [ForeignKey("PropertyId")]
+    [ForeignKey("LocationId")]
     [InverseProperty("Posts")]
-    public virtual Property Property { get; set; }
+    public virtual Location Location { get; set; }
+
+    [InverseProperty("Post")]
+    public virtual ICollection<PostAmenity> PostAmenities { get; set; } = new List<PostAmenity>();
+
+    [InverseProperty("Post")]
+    public virtual ICollection<PostReview> PostReviews { get; set; } = new List<PostReview>();
+
+    [ForeignKey("PostTypeId")]
+    [InverseProperty("Posts")]
+    public virtual PostType PostType { get; set; }
+
+    [ForeignKey("PropertyFormId")]
+    [InverseProperty("Posts")]
+    public virtual PropertyForm PropertyForm { get; set; }
+
+    [ForeignKey("PropertyTypeId")]
+    [InverseProperty("Posts")]
+    public virtual PropertyType PropertyType { get; set; }
 
     [ForeignKey("UserId")]
     [InverseProperty("Posts")]

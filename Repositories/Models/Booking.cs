@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VLivingAPI.Repositories.Data.Models;
 
+[Index("PostId", Name = "IDX_Bookings_PostID")]
+[Index("Status", Name = "IDX_Bookings_Status")]
+[Index("UserId", Name = "IDX_Bookings_UserID")]
 public partial class Booking
 {
     [Key]
@@ -17,11 +20,8 @@ public partial class Booking
     [Column("UserID")]
     public int UserId { get; set; }
 
-    [Column("PropertyID")]
-    public int PropertyId { get; set; }
-
     [Column("PostID")]
-    public int? PostId { get; set; }
+    public int PostId { get; set; }
 
     [Required]
     [StringLength(20)]
@@ -50,9 +50,8 @@ public partial class Booking
     [InverseProperty("Bookings")]
     public virtual Post Post { get; set; }
 
-    [ForeignKey("PropertyId")]
-    [InverseProperty("Bookings")]
-    public virtual Property Property { get; set; }
+    [InverseProperty("Booking")]
+    public virtual ICollection<PostReview> PostReviews { get; set; } = new List<PostReview>();
 
     [ForeignKey("UserId")]
     [InverseProperty("Bookings")]

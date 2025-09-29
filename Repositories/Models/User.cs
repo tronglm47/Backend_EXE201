@@ -12,8 +12,8 @@ namespace VLivingAPI.Repositories.Data.Models;
 [Index("IsEmailVerified", Name = "IDX_Users_IsEmailVerified")]
 [Index("Role", Name = "IDX_Users_Role")]
 [Index("SubscriptionPlanId", Name = "IDX_Users_SubscriptionPlanID")]
-[Index("Username", Name = "UQ__Users__536C85E45364CAA7", IsUnique = true)]
-[Index("Email", Name = "UQ__Users__A9D105341F29CD20", IsUnique = true)]
+[Index("Username", Name = "UQ__Users__536C85E415C98EF1", IsUnique = true)]
+[Index("Email", Name = "UQ__Users__A9D1053457D42AE9", IsUnique = true)]
 public partial class User
 {
     [Key]
@@ -92,11 +92,11 @@ public partial class User
     [InverseProperty("User")]
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
+    [InverseProperty("Reviewer")]
+    public virtual ICollection<PostReview> PostReviews { get; set; } = new List<PostReview>();
+
     [InverseProperty("User")]
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
-
-    [InverseProperty("Owner")]
-    public virtual ICollection<Property> Properties { get; set; } = new List<Property>();
 
     [InverseProperty("User")]
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();

@@ -8,7 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VLivingAPI.Repositories.Data.Models;
 
+[Index("LocationCode", Name = "IDX_Locations_Code")]
+[Index("Level", Name = "IDX_Locations_Level")]
 [Index("Name", Name = "IDX_Locations_Name")]
+[Index("ParentLocationId", Name = "IDX_Locations_ParentID")]
+[Index("LocationType", Name = "IDX_Locations_Type")]
 public partial class Location
 {
     [Key]
@@ -22,8 +26,25 @@ public partial class Location
     [StringLength(255)]
     public string Description { get; set; }
 
+    [Required]
+    [StringLength(20)]
+    public string LocationType { get; set; }
+
+    [StringLength(20)]
+    public string LocationCode { get; set; }
+
+    [StringLength(500)]
+    public string FullAddress { get; set; }
+
     [Column("ParentLocationID")]
     public int? ParentLocationId { get; set; }
+
+    public int? Level { get; set; }
+
+    public bool? IsActive { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? CreatedAt { get; set; }
 
     [InverseProperty("Location")]
     public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
@@ -36,7 +57,7 @@ public partial class Location
     public virtual Location ParentLocation { get; set; }
 
     [InverseProperty("Location")]
-    public virtual ICollection<Property> Properties { get; set; } = new List<Property>();
+    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     [InverseProperty("Location")]
     public virtual ICollection<RoommatePreference> RoommatePreferences { get; set; } = new List<RoommatePreference>();

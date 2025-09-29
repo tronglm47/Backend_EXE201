@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Linq.Expressions;
 using VLivingAPI.Repositories.Data.Models;
 
 namespace Repositories.Basic
@@ -29,6 +31,13 @@ namespace Repositories.Basic
         void PrepareCreate(T entity);
         void PrepareUpdate(T entity);
         void PrepareRemove(T entity);
+        // Advanced querying with filtering, pagination, and sorting
+        Task<IEnumerable<T>> GetWithAdvancedQuery(
+            Expression<Func<T, bool>>? filter = null,
+            int page = 1,
+            int pageSize = 10,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
+        Task<int> CountWithFilter(Expression<Func<T, bool>>? filter = null);
     }
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
@@ -149,6 +158,35 @@ namespace Repositories.Basic
             return await _context.SaveChangesAsync();
         }
 
+        public virtual async Task<IEnumerable<T>> GetWithAdvancedQuery(
+        Expression<Func<T, bool>>? filter = null,
+        int page = 1,
+        int pageSize = 10,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (orderBy != null)
+                query = orderBy(query);
+
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public virtual async Task<int> CountWithFilter(Expression<Func<T, bool>>? filter = null)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            return await query.CountAsync();
+        }
 
     }
 }
