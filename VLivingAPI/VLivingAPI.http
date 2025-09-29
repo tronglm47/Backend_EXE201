@@ -1,0 +1,6 @@
+@VLivingAPI_HostAddress = http://localhost:5147
+
+GET {{VLivingAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
