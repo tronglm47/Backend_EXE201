@@ -1,9 +1,16 @@
 using Microsoft.EntityFrameworkCore;
-using Repositories.Interfaces;
 using VLivingAPI.Repositories.Data.Models;
 
-namespace Repositories.Repositories
+namespace Repositories
 {
+    public interface IRefreshTokenRepository
+    {
+        Task<RefreshToken> CreateTokenAsync(int userId, string token, DateTime expiresAt);
+        Task<RefreshToken?> GetValidTokenAsync(string token);
+        Task RevokeTokenAsync(int tokenId);
+        Task RevokeAllUserTokensAsync(int userId);
+        Task DeleteExpiredTokensAsync();
+    }
     public class RefreshTokenRepository : IRefreshTokenRepository
     {
         private readonly VLivingDbContext _context;
@@ -36,7 +43,7 @@ namespace Repositories.Repositories
                 .AsNoTracking()
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.Token == token && 
-                                        (t.IsRevoked != true) && 
+                                        t.IsRevoked != true && 
                                         t.ExpiresAt > DateTime.UtcNow);
         }
 
@@ -54,7 +61,7 @@ namespace Repositories.Repositories
         public async Task RevokeAllUserTokensAsync(int userId)
         {
             var userTokens = await _context.RefreshTokens
-                .Where(t => t.UserId == userId && (t.IsRevoked != true))
+                .Where(t => t.UserId == userId && t.IsRevoked != true)
                 .ToListAsync();
 
             foreach (var token in userTokens)

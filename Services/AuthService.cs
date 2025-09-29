@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Repositories.Interfaces;
-using Services.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -9,9 +7,24 @@ using VLivingAPI.RequestsResponses.User;
 using Microsoft.Extensions.Logging;
 using Repositories.Constants;
 using System.Security.Cryptography;
+using Repositories;
 
-namespace Services.Services
+namespace Services
 {
+    public interface IAuthService
+    {
+        Task<LoginResponse> LoginAsync(string username, string password);
+        Task<UserResponse> GetUserInfoAsync(int userId);
+        Task<RegisterResponse> RegisterAsync(RegisterRequest request);
+        Task<LoginResponse> RefreshTokenAsync(string refreshToken);
+        Task<bool> ValidateTokenAsync(string token);
+
+        // New methods for authentication improvements
+        Task<bool> VerifyEmailAsync(string token);
+        Task<bool> SendPasswordResetAsync(string email);
+        Task<bool> ResetPasswordAsync(string token, string newPassword);
+        Task<bool> ResendVerificationEmailAsync(string email);
+    }
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepo;
@@ -273,7 +286,7 @@ namespace Services.Services
                     
                     // Check if this token was already used (user already verified)
                     var anyToken = await _emailVerificationRepo.GetTokenByValueAsync(token);
-                    if (anyToken != null && (anyToken.IsUsed == true))
+                    if (anyToken != null && anyToken.IsUsed == true)
                     {
                         // Check if user is already verified
                         var existingUser = await _userRepo.GetByIdAsync(anyToken.UserId);

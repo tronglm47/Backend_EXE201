@@ -1,10 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Repositories.Interfaces;
 using VLivingAPI.Repositories.Data.Models;
 
-namespace Repositories.Repositories
+namespace Repositories
 {
+    public interface IEmailVerificationRepository
+    {
+        Task<EmailVerificationToken> CreateTokenAsync(int userId, string token, DateTime expiresAt);
+        Task<EmailVerificationToken?> GetValidTokenAsync(string token);
+        Task<EmailVerificationToken?> GetTokenByValueAsync(string token);
+        Task MarkTokenAsUsedAsync(int tokenId);
+        Task DeleteTokenAfterUseAsync(int tokenId);
+        Task DeleteExpiredTokensAsync();
+    }
     public class EmailVerificationRepository : IEmailVerificationRepository
     {
         private readonly VLivingDbContext _context;
@@ -40,7 +48,7 @@ namespace Repositories.Repositories
                 .AsNoTracking()
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.Token == token && 
-                                        (t.IsUsed != true) && 
+                                        t.IsUsed != true && 
                                         t.ExpiresAt > DateTime.UtcNow);
             
             if (validToken != null)

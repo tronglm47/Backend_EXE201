@@ -1,10 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Repositories.Interfaces;
 using VLivingAPI.Repositories.Data.Models;
 
-namespace Repositories.Repositories
+namespace Repositories
 {
+    public interface IPasswordResetRepository
+    {
+        Task<PasswordResetToken> CreateTokenAsync(int userId, string token, DateTime expiresAt);
+        Task<PasswordResetToken?> GetValidTokenAsync(string token);
+        Task MarkTokenAsUsedAsync(int tokenId);
+        Task DeleteExpiredTokensAsync();
+    }
     public class PasswordResetRepository : IPasswordResetRepository
     {
         private readonly VLivingDbContext _context;
@@ -50,7 +56,7 @@ namespace Repositories.Repositories
                 .AsNoTracking()
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.Token == token && 
-                                        (t.IsUsed != true) && 
+                                        t.IsUsed != true && 
                                         t.ExpiresAt > DateTime.UtcNow);
         }
 

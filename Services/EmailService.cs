@@ -1,13 +1,18 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
-using Services.Interfaces;
 using Services.Models;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
 
-namespace Services.Services
+namespace Services
 {
+    public interface IEmailService
+    {
+        Task SendEmailVerificationAsync(string email, string username, string verificationToken);
+        Task SendPasswordResetAsync(string email, string username, string resetToken);
+        Task SendWelcomeEmailAsync(string email, string username);
+    }
     public class EmailService : IEmailService
     {
         private readonly EmailSettings _emailSettings;

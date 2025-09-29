@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Services.Interfaces;
+using Services;
 using System.Security.Claims;
 using VLivingAPI.RequestsResponses.User;
 using Repositories.Constants;

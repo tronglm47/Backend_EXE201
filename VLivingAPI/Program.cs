@@ -2,15 +2,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Repositories.Interfaces;
-using Repositories.Repositories;
-using Services.Interfaces;
-using Services.Services;
 using Services.Models;
 using System.Text;
 using VLivingAPI.Repositories.Data.Models;
-using EVCS.Repositories.HuyCG.Interfaces;
-using EVCS.Repositories.HuyCG.Basic;
+using Repositories;
+using Services;
+using Repositories.Basic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,16 +52,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Services layer
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IPropertyService, PropertyService>();
-builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
-builder.Services.AddScoped<IAdService, AdService>();
-builder.Services.AddScoped<IAdRequestService, AdRequestService>();
-builder.Services.AddScoped<IActivityService, ActivityService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IRoommateMatchService, RoommateMatchService>();
-builder.Services.AddScoped<IRoommatePreferenceService, RoommatePreferenceService>();
 
 // Background Services
 builder.Services.AddHostedService<TokenCleanupService>();
