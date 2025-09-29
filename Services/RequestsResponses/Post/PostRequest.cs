@@ -1,10 +1,9 @@
-namespace Services.RequestsResponses.Post
+﻿namespace Services.RequestsResponses.Post
 {
-    public class PostResponse
+    public class PostRequest
     {
-        public class PostGetAllResponse
+        public class PostCreateRequest
         {
-            public int PostId { get; set; }
             public int UserId { get; set; }
             public int PostTypeId { get; set; }
             public int PropertyTypeId { get; set; }
@@ -14,11 +13,8 @@ namespace Services.RequestsResponses.Post
             public string Content { get; set; } = string.Empty;
             public string? Images { get; set; }
             public decimal? Price { get; set; }
-            public string Status { get; set; } = string.Empty;
-            public DateTime? CreatedAt { get; set; }
-            public int? Views { get; set; }
         }
-        public class PostGetByIdResponse
+        public class PostUpdateRequest
         {
             public int PostId { get; set; }
             public int UserId { get; set; }
@@ -31,8 +27,6 @@ namespace Services.RequestsResponses.Post
             public string? Images { get; set; }
             public decimal? Price { get; set; }
             public string Status { get; set; } = string.Empty;
-            public DateTime? CreatedAt { get; set; }
-            public int? Views { get; set; }
         }
     }
 }

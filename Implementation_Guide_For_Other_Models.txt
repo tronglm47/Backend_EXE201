@@ -1,0 +1,226 @@
+# Hướng dẫn triển khai GET API cho các models khác
+
+Dựa trên việc triển khai thành công cho model Post, đây là hướng dẫn để triển khai tương tự cho các models khác.
+
+## Cấu trúc đã hoàn thành cho Post:
+
+### 1. Repository Layer (Repositories/[Model]Repository.cs)
+- Kế thừa từ GenericRepository<Model>
+- Implement 2 methods chính:
+  * GetModelsWithAdvancedQuery(): Xử lý search, sorting, pagination
+  * CountWithSearch(): Đếm số records phù hợp với search
+
+**Ví dụ cấu trúc:**
+```csharp
+public async Task<IEnumerable<Model>> GetModelsWithAdvancedQuery(
+    string? search = null,
+    int page = 1,
+    int pageSize = 5,
+    string sortBy = "ModelId",
+    bool isDescending = false)
+{
+    // Logic filter theo search
+    // Logic sorting
+    // Gọi GetWithAdvancedQuery từ base class
+}
+
+public async Task<int> CountWithSearch(string? search = null)
+{
+    // Logic filter tương tự GetModelsWithAdvancedQuery
+    // Return CountWithFilter
+}
+```
+
+### 2. Services/RequestsResponses/[Model]/ (4 files)
+
+#### a) [Model]QueryParameters.cs
+```csharp
+public class ModelQueryParameters : QueryParametersBase
+{
+    public override string DefaultSortBy => "modelid";
+}
+```
+
+#### b) [Model]Request.cs
+```csharp
+public class ModelRequest
+{
+    public class ModelCreateRequest { /* properties */ }
+    public class ModelUpdateRequest { /* properties */ }
+}
+```
+
+#### c) [Model]Response.cs
+```csharp
+public class ModelResponse
+{
+    public class ModelGetAllResponse { /* all model properties */ }
+    public class ModelGetByIdResponse { /* all model properties */ }
+}
+```
+
+#### d) [Model]FieldResponse.cs
+```csharp
+public class ModelFieldResponse : FieldResponseBase
+{
+    protected override List<string> ValidFields => new List<string>
+    {
+        // Tất cả field names viết thường
+        "modelid", "field1", "field2", ...
+    };
+
+    protected override void MapField<T>(string field, T item, Dictionary<string, object?> result)
+    {
+        switch (field)
+        {
+            case "modelid":
+                result["modelId"] = (item as ModelResponse.ModelGetAllResponse)?.ModelId
+                                 ?? (item as ModelResponse.ModelGetByIdResponse)?.ModelId;
+                break;
+            // Thêm cases cho tất cả fields
+        }
+    }
+}
+```
+
+### 3. Service Layer (Services/[Model]Service.cs)
+
+```csharp
+public interface IModelService
+{
+    Task<PagedResponse<object>> GetAllModelAsync(ModelQueryParameters queryParams);
+    Task<object?> GetModelById(int id, List<string> selectedFields);
+}
+
+public class ModelService : IModelService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ModelFieldResponse _modelFieldResponse;
+
+    public ModelService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+        _modelFieldResponse = new ModelFieldResponse();
+    }
+
+    public async Task<PagedResponse<object>> GetAllModelAsync(ModelQueryParameters queryParams)
+    {
+        // Cast repository về concrete type để access custom methods
+        var modelRepository = _unitOfWork.Models as ModelRepository;
+        
+        // Gọi custom methods và map sang response objects
+        // Return PagedResponse với pagination info
+    }
+
+    public async Task<object?> GetModelById(int id, List<string> selectedFields)
+    {
+        // Get by ID từ UnitOfWork
+        // Map sang response object
+        // Apply field selection
+    }
+}
+```
+
+### 4. Controller Layer (VLivingAPI/Controllers/[Model]Controller.cs)
+
+```csharp
+[Route("api/[controller]")]
+[ApiController]
+public class ModelController : ControllerBase
+{
+    private readonly IModelService _modelService;
+
+    public ModelController(IModelService modelService)
+    {
+        _modelService = modelService;
+    }
+
+    // GET: api/Model
+    [HttpGet]
+    public async Task<IActionResult> Get([FromQuery] ModelQueryParameters queryParams)
+    {
+        try
+        {
+            var result = await _modelService.GetAllModelAsync(queryParams);
+            return Ok(new
+            {
+                success = true,
+                data = result.Items,
+                pagination = new
+                {
+                    currentPage = result.CurrentPage,
+                    totalPages = result.TotalPages,
+                    totalItems = result.TotalItems,
+                    pageSize = queryParams.PageSize
+                }
+            });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { success = false, message = "Internal server error" });
+        }
+    }
+
+    // GET api/Model/5
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id, [FromQuery] string? select = null)
+    {
+        try
+        {
+            var selectedFields = new List<string>();
+            if (!string.IsNullOrWhiteSpace(select))
+            {
+                selectedFields = select.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(x => x.Trim().ToLowerInvariant())
+                                      .ToList();
+            }
+
+            var result = await _modelService.GetModelById(id, selectedFields);
+            if (result == null)
+            {
+                return NotFound(new { success = false, message = "Model not found" });
+            }
+
+            return Ok(new { success = true, data = result });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { success = false, message = "Internal server error" });
+        }
+    }
+}
+```
+
+## Các models cần implement:
+
+1. User
+2. Activity  
+3. Ad
+4. AdRequest
+5. Booking
+6. Location
+7. Message
+8. Notification
+9. Payment
+10. RoommateMatch
+11. RoommatePreference
+12. SubscriptionPlan
+13. UserSubscription
+
+## Lưu ý quan trọng:
+
+1. **UnitOfWork**: Cần thêm property cho repository mới vào IUnitOfWork và UnitOfWork class
+2. **Dependency Injection**: Đăng ký service trong Program.cs
+3. **Naming Convention**: Giữ nhất quán tên các fields và methods
+4. **Error Handling**: Sử dụng try-catch đơn giản như đã implement
+5. **No Authorization**: Hiện tại không cần Authorize attribute
+6. **Field Selection**: Hỗ trợ query parameter "select" để chọn fields cụ thể
+
+## Thứ tự triển khai đề xuất:
+1. Tạo Repository với 2 custom methods
+2. Tạo 4 files RequestsResponses
+3. Implement Service với 2 methods GET
+4. Tạo Controller với 2 endpoints GET
+5. Test build project
+
+Build thành công với các warnings nhỏ (có thể bỏ qua).

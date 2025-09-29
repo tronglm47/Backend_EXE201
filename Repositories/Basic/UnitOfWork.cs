@@ -9,7 +9,6 @@ namespace Repositories.Basic
         IGenericRepository<T> Repository<T>() where T : class;
 
         // Specific repositories cho các entities chính (trừ User)
-        IGenericRepository<Property> Properties { get; }
         IGenericRepository<Post> Posts { get; }
         IGenericRepository<Activity> Activities { get; }
         IGenericRepository<Ad> Ads { get; }
@@ -43,7 +42,6 @@ namespace Repositories.Basic
         private readonly Dictionary<Type, object> _repositories;
 
         // Specific repository properties
-        private IGenericRepository<Property>? _properties;
         private IGenericRepository<Post>? _posts;
         private IGenericRepository<Activity>? _activities;
         private IGenericRepository<Ad>? _ads;
@@ -78,11 +76,8 @@ namespace Repositories.Basic
         }
 
         // Specific repository properties
-        public IGenericRepository<Property> Properties =>
-            _properties ??= new GenericRepository<Property>(_context);
-
         public IGenericRepository<Post> Posts =>
-            _posts ??= new GenericRepository<Post>(_context);
+            _posts ??= new PostRepository(_context);
 
         public IGenericRepository<Activity> Activities =>
             _activities ??= new GenericRepository<Activity>(_context);
