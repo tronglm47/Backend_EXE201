@@ -10,8 +10,9 @@ namespace Services.RequestsResponses.Post
     {
         protected override List<string> ValidFields => new List<string>
         {
-            "postid", "userid", "posttypeid", "propertytypeid", "propertyformid", 
-            "locationid", "title", "content", "images", "price", "status", "createdat", "views"
+            "postid", "userid", "posttypeid", "posttype", "propertytypeid", "propertytype", 
+            "propertyformid", "propertyform", "locationid", "amenitiesid", "amenities", 
+            "title", "content", "images", "price", "status", "createdat", "views"
         };
 
         protected override void MapField<T>(string field, T item, Dictionary<string, object?> result)
@@ -30,17 +31,32 @@ namespace Services.RequestsResponses.Post
                     result["postTypeId"] = (item as PostResponse.PostGetAllResponse)?.PostTypeId
                                             ?? (item as PostResponse.PostGetByIdResponse)?.PostTypeId;
                     break;
+                case "posttype":
+                    result["postType"] = (item as PostResponse.PostGetByIdResponse)?.PostType;
+                    break;
                 case "propertytypeid":
                     result["propertyTypeId"] = (item as PostResponse.PostGetAllResponse)?.PropertyTypeId
                                                 ?? (item as PostResponse.PostGetByIdResponse)?.PropertyTypeId;
+                    break;
+                case "propertytype":
+                    result["propertyType"] = (item as PostResponse.PostGetByIdResponse)?.PropertyType;
                     break;
                 case "propertyformid":
                     result["propertyFormId"] = (item as PostResponse.PostGetAllResponse)?.PropertyFormId
                                                 ?? (item as PostResponse.PostGetByIdResponse)?.PropertyFormId;
                     break;
+                case "propertyform":
+                    result["propertyForm"] = (item as PostResponse.PostGetByIdResponse)?.PropertyForm;
+                    break;
                 case "locationid":
                     result["locationId"] = (item as PostResponse.PostGetAllResponse)?.LocationId
                                             ?? (item as PostResponse.PostGetByIdResponse)?.LocationId;
+                    break;
+                case "amenitiesid":
+                    result["amenitiesId"] = (item as PostResponse.PostGetByIdResponse)?.AmenitiesId;
+                    break;
+                case "amenities":
+                    result["amenities"] = (item as PostResponse.PostGetByIdResponse)?.Amenities;
                     break;
                 case "title":
                     result["title"] = (item as PostResponse.PostGetAllResponse)?.Title
@@ -72,62 +88,5 @@ namespace Services.RequestsResponses.Post
                     break;
             }
         }
-
-        //public static object SelectFields(OrderResponses.OrderGetAllResponses item, List<string> selectedFields)
-        //{
-        //    if (!selectedFields.Any())
-        //        return item;
-
-        //    var result = new Dictionary<string, object?>();
-
-        //    foreach (var field in selectedFields.Where(f => ValidFields.Contains(f)))
-        //    {
-        //        switch (field.ToLowerInvariant())
-        //        {
-        //            case "orderid":
-        //                result["orderid"] = item.OrderId;
-        //                break;
-        //            case "userid":
-        //                result["userid"] = item.UserId;
-        //                break;
-        //            case "orderdate":
-        //                result["orderdate"] = item.OrderDate;
-        //                break;
-        //            case "status":
-        //                result["status"] = item.Status;
-        //                break;
-        //        }
-        //    }
-        //    return result;
-        //}
-        //public static object SelectFields(OrderResponses.OrderGetByIdResponses item, List<string> selectedFields)
-        //{
-        //    if (!selectedFields.Any())
-        //        return item;
-
-        //    var result = new Dictionary<string, object?>();
-
-        //    foreach (var field in selectedFields.Where(f => ValidFields.Contains(f)))
-        //    {
-        //        switch (field.ToLowerInvariant())
-        //        {
-        //            case "orderid":
-        //                result["orderid"] = item.OrderId;
-        //                break;
-        //            case "userid":
-        //                result["userid"] = item.UserId;
-        //                break;
-        //            case "orderdate":
-        //                result["orderdate"] = item.OrderDate;
-        //                break;
-        //            case "status":
-        //                result["status"] = item.Status;
-        //                break;
-        //        }
-        //    }
-        //    return result;
-        //}
-
-
     }
 }

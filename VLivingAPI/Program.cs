@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Repositories;
+using Repositories.Basic;
+using Services;
 using Services.Models;
+using Services.Utils;
 using System.Text;
 using VLivingAPI.Repositories.Data.Models;
-using Repositories;
-using Services;
-using Repositories.Basic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,11 @@ if (builder.Environment.IsProduction())
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<AutoMapperProfile>();
+});
 
 // Configure EmailSettings
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -53,6 +59,15 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
+//
+builder.Services.AddScoped<IPostTypeService, PostTypeService>();
+builder.Services.AddScoped<IAmenityService, AmenityService>();
+builder.Services.AddScoped<IPostAmenityService, PostAmenityService>();
+builder.Services.AddScoped<IPropertyTypeService, PropertyTypeService>();
+builder.Services.AddScoped<IPropertyFormService, PropertyFormService>();
+
+//
 
 // Background Services
 builder.Services.AddHostedService<TokenCleanupService>();

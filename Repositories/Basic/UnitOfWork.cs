@@ -5,117 +5,39 @@ namespace Repositories.Basic
 {
     public interface IUnitOfWork : IDisposable
     {
-        // Generic Repository cho tất cả entities
-        IGenericRepository<T> Repository<T>() where T : class;
-
-        // Specific repositories cho các entities chính (trừ User)
-        IGenericRepository<Post> Posts { get; }
-        IGenericRepository<Activity> Activities { get; }
-        IGenericRepository<Ad> Ads { get; }
-        IGenericRepository<AdRequest> AdRequests { get; }
-        IGenericRepository<Booking> Bookings { get; }
-        IGenericRepository<Location> Locations { get; }
-        IGenericRepository<Message> Messages { get; }
-        IGenericRepository<Notification> Notifications { get; }
-        IGenericRepository<Payment> Payments { get; }
-        IGenericRepository<RoommateMatch> RoommateMatches { get; }
-        IGenericRepository<RoommatePreference> RoommatePreferences { get; }
-        IGenericRepository<SubscriptionPlan> SubscriptionPlans { get; }
-        IGenericRepository<UserSubscription> UserSubscriptions { get; }
-
-        // Transaction methods
+        PostAmenityRepository PostAmenity { get; }
+        PostRepository Posts { get; }
+        PostTypeRepository PostType { get; }
+        PropertyTypeRepository PropertyTypes { get; }
+        PropertyFormRepository PropertyForms { get; }
+        AmenityRepository Amenities { get; }
+        
         Task<int> SaveChangesAsync();
         int SaveChanges();
-
-        // Transaction management
-        Task BeginTransactionAsync();
-        Task CommitTransactionAsync();
-        Task RollbackTransactionAsync();
-        void BeginTransaction();
-        void CommitTransaction();
-        void RollbackTransaction();
     }
+
     public class UnitOfWork : IUnitOfWork
     {
         private readonly VLivingDbContext _context;
-        private IDbContextTransaction? _transaction;
-        private readonly Dictionary<Type, object> _repositories;
-
-        // Specific repository properties
-        private IGenericRepository<Post>? _posts;
-        private IGenericRepository<Activity>? _activities;
-        private IGenericRepository<Ad>? _ads;
-        private IGenericRepository<AdRequest>? _adRequests;
-        private IGenericRepository<Booking>? _bookings;
-        private IGenericRepository<Location>? _locations;
-        private IGenericRepository<Message>? _messages;
-        private IGenericRepository<Notification>? _notifications;
-        private IGenericRepository<Payment>? _payments;
-        private IGenericRepository<RoommateMatch>? _roommateMatches;
-        private IGenericRepository<RoommatePreference>? _roommatePreferences;
-        private IGenericRepository<SubscriptionPlan>? _subscriptionPlans;
-        private IGenericRepository<UserSubscription>? _userSubscriptions;
+        
+        public PostAmenityRepository PostAmenity { get; private set; }
+        public PostRepository Posts { get; private set; }
+        public PostTypeRepository PostType { get; private set; }
+        public PropertyTypeRepository PropertyTypes { get; private set; }
+        public PropertyFormRepository PropertyForms { get; private set; }
+        public AmenityRepository Amenities { get; private set; }
 
         public UnitOfWork(VLivingDbContext context)
         {
             _context = context;
-            _repositories = new Dictionary<Type, object>();
+            PostAmenity = new PostAmenityRepository(context);
+            Posts = new PostRepository(context);
+            PostType = new PostTypeRepository(context);
+            PropertyTypes = new PropertyTypeRepository(context);
+            PropertyForms = new PropertyFormRepository(context);
+            Amenities = new AmenityRepository(context);
         }
 
-        // Generic repository method
-        public IGenericRepository<T> Repository<T>() where T : class
-        {
-            if (_repositories.ContainsKey(typeof(T)))
-            {
-                return (IGenericRepository<T>)_repositories[typeof(T)];
-            }
-
-            var repository = new GenericRepository<T>(_context);
-            _repositories[typeof(T)] = repository;
-            return repository;
-        }
-
-        // Specific repository properties
-        public IGenericRepository<Post> Posts =>
-            _posts ??= new PostRepository(_context);
-
-        public IGenericRepository<Activity> Activities =>
-            _activities ??= new GenericRepository<Activity>(_context);
-
-        public IGenericRepository<Ad> Ads =>
-            _ads ??= new GenericRepository<Ad>(_context);
-
-        public IGenericRepository<AdRequest> AdRequests =>
-            _adRequests ??= new GenericRepository<AdRequest>(_context);
-
-        public IGenericRepository<Booking> Bookings =>
-            _bookings ??= new GenericRepository<Booking>(_context);
-
-        public IGenericRepository<Location> Locations =>
-            _locations ??= new GenericRepository<Location>(_context);
-
-        public IGenericRepository<Message> Messages =>
-            _messages ??= new GenericRepository<Message>(_context);
-
-        public IGenericRepository<Notification> Notifications =>
-            _notifications ??= new GenericRepository<Notification>(_context);
-
-        public IGenericRepository<Payment> Payments =>
-            _payments ??= new GenericRepository<Payment>(_context);
-
-        public IGenericRepository<RoommateMatch> RoommateMatches =>
-            _roommateMatches ??= new GenericRepository<RoommateMatch>(_context);
-
-        public IGenericRepository<RoommatePreference> RoommatePreferences =>
-            _roommatePreferences ??= new GenericRepository<RoommatePreference>(_context);
-
-        public IGenericRepository<SubscriptionPlan> SubscriptionPlans =>
-            _subscriptionPlans ??= new GenericRepository<SubscriptionPlan>(_context);
-
-        public IGenericRepository<UserSubscription> UserSubscriptions =>
-            _userSubscriptions ??= new GenericRepository<UserSubscription>(_context);
-
-        // Save changes methods
         public async Task<int> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync();
@@ -126,114 +48,8 @@ namespace Repositories.Basic
             return _context.SaveChanges();
         }
 
-        // Transaction management - Async
-        public async Task BeginTransactionAsync()
-        {
-            if (_transaction != null)
-            {
-                throw new InvalidOperationException("A transaction is already in progress.");
-            }
-            _transaction = await _context.Database.BeginTransactionAsync();
-        }
-
-        public async Task CommitTransactionAsync()
-        {
-            if (_transaction == null)
-            {
-                throw new InvalidOperationException("No transaction in progress.");
-            }
-
-            try
-            {
-                await _context.SaveChangesAsync();
-                await _transaction.CommitAsync();
-            }
-            catch
-            {
-                await RollbackTransactionAsync();
-                throw;
-            }
-            finally
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-        }
-
-        public async Task RollbackTransactionAsync()
-        {
-            if (_transaction == null)
-            {
-                throw new InvalidOperationException("No transaction in progress.");
-            }
-
-            try
-            {
-                await _transaction.RollbackAsync();
-            }
-            finally
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-        }
-
-        // Transaction management - Sync
-        public void BeginTransaction()
-        {
-            if (_transaction != null)
-            {
-                throw new InvalidOperationException("A transaction is already in progress.");
-            }
-            _transaction = _context.Database.BeginTransaction();
-        }
-
-        public void CommitTransaction()
-        {
-            if (_transaction == null)
-            {
-                throw new InvalidOperationException("No transaction in progress.");
-            }
-
-            try
-            {
-                _context.SaveChanges();
-                _transaction.Commit();
-            }
-            catch
-            {
-                RollbackTransaction();
-                throw;
-            }
-            finally
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-        }
-
-        public void RollbackTransaction()
-        {
-            if (_transaction == null)
-            {
-                throw new InvalidOperationException("No transaction in progress.");
-            }
-
-            try
-            {
-                _transaction.Rollback();
-            }
-            finally
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-        }
-
-        // Dispose
         public void Dispose()
         {
-            _transaction?.Dispose();
             _context?.Dispose();
         }
     }

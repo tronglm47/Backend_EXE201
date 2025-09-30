@@ -13,6 +13,18 @@ namespace Repositories
         public PostRepository(VLivingDbContext context) : base(context)
         {
         }
+
+        public async Task<Post> GetByIdAdvancedAsync(int id)
+        {
+            var item = await _context.Posts
+                .Include(pt => pt.PropertyType)
+                .Include(pf => pf.PropertyForm)
+                .Include(pty => pty.PostType)
+                .Include(pa => pa.PostAmenities).ThenInclude(a => a.Amenity)
+                .FirstOrDefaultAsync(p => p.PostId == id);
+            return item ?? new Post();
+        }
+
         public async Task<IEnumerable<Post>> GetPostsWithAdvancedQuery(
             string? search = null,
             int page = 1,
@@ -31,9 +43,14 @@ namespace Repositories
             Func<IQueryable<Post>, IOrderedQueryable<Post>>? orderBy = sortBy.ToLower() switch
             {
                 "postid" => q => isDescending ? q.OrderByDescending(c => c.PostId) : q.OrderBy(c => c.PostId),
+                "userid" => q => isDescending ? q.OrderByDescending(c => c.UserId) : q.OrderBy(c => c.UserId),
+                "title" => q => isDescending ? q.OrderByDescending(c => c.Title) : q.OrderBy(c => c.Title),
+                "status" => q => isDescending ? q.OrderByDescending(c => c.Status) : q.OrderBy(c => c.Status),
+                "createdat" => q => isDescending ? q.OrderByDescending(c => c.CreatedAt) : q.OrderBy(c => c.CreatedAt),
+                _ => q => q.OrderBy(c => c.PostId) // Default case
             };
 
-            return await GetWithAdvancedQuery(filter, page, pageSize, orderBy);
+            return await base.GetWithAdvancedQuery(filter, page, pageSize, orderBy);
         }
 
         public async Task<int> CountWithSearch(string? search = null)

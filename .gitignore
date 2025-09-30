@@ -386,3 +386,17 @@ FodyWeavers.xsd
 appsettings.json
 appsettings.*.json
 !appsettings.Example.json
+
+# VLiving specific - ignore local development files
+Note/
+Notes/
+*.json.example
+vliving-service-account.json
+vliving-service-account*.json
+google-service-account.json
+google-credentials.json
+credentials.json
+
+# Deployment scripts with sensitive data
+deploy.ps1
+deploy.sh
