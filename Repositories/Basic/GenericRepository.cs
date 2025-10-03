@@ -35,8 +35,10 @@ namespace Repositories.Basic
             Expression<Func<T, bool>>? filter = null,
             int page = 1,
             int pageSize = 10,
-            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
-        Task<int> CountWithFilter(Expression<Func<T, bool>>? filter = null);
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            string? searchField = null,
+            string? searchValue = null);
+        Task<int> CountWithFilter(Expression<Func<T, bool>>? filter = null, string? searchField = null, string? searchValue = null);
     }
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
@@ -161,12 +163,20 @@ namespace Repositories.Basic
         Expression<Func<T, bool>>? filter = null,
         int page = 1,
         int pageSize = 10,
-        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        string? searchField = null,
+        string? searchValue = null)
         {
             IQueryable<T> query = _context.Set<T>();
 
+            // Apply base filter
             if (filter != null)
                 query = query.Where(filter);
+
+            // Apply dynamic search filter
+            var searchExpression = BuildSearchExpression(searchField, searchValue);
+            if (searchExpression != null)
+                query = query.Where(searchExpression);
 
             if (orderBy != null)
                 query = orderBy(query);
@@ -177,14 +187,163 @@ namespace Repositories.Basic
                 .ToListAsync();
         }
 
-        public virtual async Task<int> CountWithFilter(Expression<Func<T, bool>>? filter = null)
+        public virtual async Task<int> CountWithFilter(Expression<Func<T, bool>>? filter = null, string? searchField = null, string? searchValue = null)
         {
             IQueryable<T> query = _context.Set<T>();
 
+            // Apply base filter
             if (filter != null)
                 query = query.Where(filter);
 
+            // Apply dynamic search filter
+            var searchExpression = BuildSearchExpression(searchField, searchValue);
+            if (searchExpression != null)
+                query = query.Where(searchExpression);
+
             return await query.CountAsync();
+        }
+
+        /// <summary>
+        /// Build dynamic search expression based on searchField and searchValue
+        /// Supports: string (Contains), int, decimal, double, bool
+        /// </summary>
+        protected Expression<Func<T, bool>>? BuildSearchExpression(string? searchField, string? searchValue)
+        {
+            if (string.IsNullOrWhiteSpace(searchField) || string.IsNullOrWhiteSpace(searchValue))
+                return null;
+
+            var parameter = Expression.Parameter(typeof(T), "x");
+            var property = typeof(T).GetProperty(searchField, 
+                System.Reflection.BindingFlags.IgnoreCase | 
+                System.Reflection.BindingFlags.Public | 
+                System.Reflection.BindingFlags.Instance);
+
+            if (property == null)
+                return null;
+
+            var propertyAccess = Expression.Property(parameter, property);
+            var propertyType = property.PropertyType;
+
+            // Handle nullable types
+            var underlyingType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+
+            Expression? comparison = null;
+
+            try
+            {
+                if (underlyingType == typeof(string))
+                {
+                    // String: Contains (case-insensitive)
+                    var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes);
+                    var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+                    
+                    if (toLowerMethod != null && containsMethod != null)
+                    {
+                        var propertyToLower = Expression.Call(propertyAccess, toLowerMethod);
+                        var valueConstant = Expression.Constant(searchValue.ToLower());
+                        comparison = Expression.Call(propertyToLower, containsMethod, valueConstant);
+                    }
+                }
+                else if (underlyingType == typeof(int))
+                {
+                    // Int: Equals
+                    if (int.TryParse(searchValue, out int intValue))
+                    {
+                        var valueConstant = Expression.Constant(intValue, underlyingType);
+                        
+                        // Handle nullable
+                        if (propertyType != underlyingType)
+                        {
+                            var hasValue = Expression.Property(propertyAccess, "HasValue");
+                            var value = Expression.Property(propertyAccess, "Value");
+                            var equals = Expression.Equal(value, valueConstant);
+                            comparison = Expression.AndAlso(hasValue, equals);
+                        }
+                        else
+                        {
+                            comparison = Expression.Equal(propertyAccess, valueConstant);
+                        }
+                    }
+                }
+                else if (underlyingType == typeof(decimal))
+                {
+                    // Decimal: Equals
+                    if (decimal.TryParse(searchValue, out decimal decimalValue))
+                    {
+                        var valueConstant = Expression.Constant(decimalValue, underlyingType);
+                        
+                        // Handle nullable
+                        if (propertyType != underlyingType)
+                        {
+                            var hasValue = Expression.Property(propertyAccess, "HasValue");
+                            var value = Expression.Property(propertyAccess, "Value");
+                            var equals = Expression.Equal(value, valueConstant);
+                            comparison = Expression.AndAlso(hasValue, equals);
+                        }
+                        else
+                        {
+                            comparison = Expression.Equal(propertyAccess, valueConstant);
+                        }
+                    }
+                }
+                else if (underlyingType == typeof(double))
+                {
+                    // Double: Equals
+                    if (double.TryParse(searchValue, out double doubleValue))
+                    {
+                        var valueConstant = Expression.Constant(doubleValue, underlyingType);
+                        
+                        // Handle nullable
+                        if (propertyType != underlyingType)
+                        {
+                            var hasValue = Expression.Property(propertyAccess, "HasValue");
+                            var value = Expression.Property(propertyAccess, "Value");
+                            var equals = Expression.Equal(value, valueConstant);
+                            comparison = Expression.AndAlso(hasValue, equals);
+                        }
+                        else
+                        {
+                            comparison = Expression.Equal(propertyAccess, valueConstant);
+                        }
+                    }
+                }
+                else if (underlyingType == typeof(bool))
+                {
+                    // Bool: Equals (accepts: true/false, 1/0, yes/no)
+                    bool boolValue;
+                    if (bool.TryParse(searchValue, out boolValue) ||
+                        (searchValue == "1" && (boolValue = true)) ||
+                        (searchValue == "0" && (boolValue = false)) ||
+                        (searchValue.Equals("yes", StringComparison.OrdinalIgnoreCase) && (boolValue = true)) ||
+                        (searchValue.Equals("no", StringComparison.OrdinalIgnoreCase) && (boolValue = false)))
+                    {
+                        var valueConstant = Expression.Constant(boolValue, underlyingType);
+                        
+                        // Handle nullable
+                        if (propertyType != underlyingType)
+                        {
+                            var hasValue = Expression.Property(propertyAccess, "HasValue");
+                            var value = Expression.Property(propertyAccess, "Value");
+                            var equals = Expression.Equal(value, valueConstant);
+                            comparison = Expression.AndAlso(hasValue, equals);
+                        }
+                        else
+                        {
+                            comparison = Expression.Equal(propertyAccess, valueConstant);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If any error occurs, return null (no search applied)
+                return null;
+            }
+
+            if (comparison == null)
+                return null;
+
+            return Expression.Lambda<Func<T, bool>>(comparison, parameter);
         }
 
     }

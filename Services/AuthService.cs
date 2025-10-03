@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using VLivingAPI.RequestsResponses.User;
+using Services.RequestsResponses.User;
 using Microsoft.Extensions.Logging;
 using Repositories.Constants;
 using System.Security.Cryptography;
@@ -59,7 +59,7 @@ namespace Services
             
             try
             {
-                VLivingAPI.Repositories.Data.Models.User? user = null;
+                VLivingAPI.Repositories.Models.User? user = null;
                 
                 // Check if input is email format
                 if (usernameOrEmail.Contains("@"))

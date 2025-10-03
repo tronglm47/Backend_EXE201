@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace VLivingAPI.RequestsResponses.User
+namespace Services.RequestsResponses.User
 {
     public class LoginRequest
     {
@@ -13,3 +13,4 @@ namespace VLivingAPI.RequestsResponses.User
         public required string Password { get; set; }
     }
 }
+

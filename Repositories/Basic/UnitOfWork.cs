@@ -1,18 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
-using VLivingAPI.Repositories.Data.Models;
+﻿using VLivingAPI.Repositories.Data;
 
 namespace Repositories.Basic
 {
     public interface IUnitOfWork : IDisposable
     {
-        LocationRepository Locations { get; }
-        PostAmenityRepository PostAmenity { get; }
-        PostRepository Posts { get; }
-        PostTypeRepository PostType { get; }
-        PropertyTypeRepository PropertyTypes { get; }
-        PropertyFormRepository PropertyForms { get; }
-        AmenityRepository Amenities { get; }
-        
+        ISubdivisionRepository Subdivisions { get; }
         Task<int> SaveChangesAsync();
         int SaveChanges();
     }
@@ -20,25 +12,20 @@ namespace Repositories.Basic
     public class UnitOfWork : IUnitOfWork
     {
         private readonly VLivingDbContext _context;
-        
-        public LocationRepository Locations { get; private set; }
-        public PostAmenityRepository PostAmenity { get; private set; }
-        public PostRepository Posts { get; private set; }
-        public PostTypeRepository PostType { get; private set; }
-        public PropertyTypeRepository PropertyTypes { get; private set; }
-        public PropertyFormRepository PropertyForms { get; private set; }
-        public AmenityRepository Amenities { get; private set; }
+        private ISubdivisionRepository? _subdivisionRepository;
 
         public UnitOfWork(VLivingDbContext context)
         {
             _context = context;
-            Locations = new LocationRepository(context);
-            PostAmenity = new PostAmenityRepository(context);
-            Posts = new PostRepository(context);
-            PostType = new PostTypeRepository(context);
-            PropertyTypes = new PropertyTypeRepository(context);
-            PropertyForms = new PropertyFormRepository(context);
-            Amenities = new AmenityRepository(context);
+        }
+
+        public ISubdivisionRepository Subdivisions
+        {
+            get
+            {
+                _subdivisionRepository ??= new SubdivisionRepository(_context);
+                return _subdivisionRepository;
+            }
         }
 
         public async Task<int> SaveChangesAsync()

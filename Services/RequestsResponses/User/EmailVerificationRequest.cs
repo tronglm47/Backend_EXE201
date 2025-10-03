@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace VLivingAPI.RequestsResponses.User
+namespace Services.RequestsResponses.User
 {
     public class EmailVerificationRequest
     {

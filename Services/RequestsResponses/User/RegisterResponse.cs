@@ -1,4 +1,4 @@
-namespace VLivingAPI.RequestsResponses.User
+namespace Services.RequestsResponses.User
 {
     public class RegisterResponse
     {

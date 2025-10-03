@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Services.RequestsResponses.User
 {
@@ -35,3 +35,4 @@ namespace Services.RequestsResponses.User
         }
     }
 }
+

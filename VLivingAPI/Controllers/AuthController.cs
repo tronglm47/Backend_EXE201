@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using System.Security.Claims;
-using VLivingAPI.RequestsResponses.User;
+using Services.RequestsResponses.User;
 using Repositories.Constants;
 
 namespace VLivingAPI.Controllers

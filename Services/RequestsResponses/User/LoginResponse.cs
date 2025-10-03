@@ -1,4 +1,4 @@
-﻿namespace VLivingAPI.RequestsResponses.User
+namespace Services.RequestsResponses.User
 {
     public class LoginResponse
     {
@@ -8,3 +8,4 @@
         public bool IsEmailVerified { get; set; }
     }
 }
+

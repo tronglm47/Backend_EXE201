@@ -14,7 +14,8 @@ namespace Services.RequestsResponses
 
         [Range(1, 100, ErrorMessage = "PageSize must be between 1 and 100")]
         public int PageSize { get; set; } = 10;
-
+        
+        public string? SearchField { get; set; } = null;
         public string? Search { get; set; }
 
         // default sort field sẽ do class con override
