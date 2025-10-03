@@ -73,7 +73,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 //
-
+builder.Services.AddScoped<ISubdivisionService, SubdivisionService>();
 //
 
 // Background Services
