@@ -6,26 +6,27 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
-[Index("Name", Name = "IDX_PropertyForms_Name")]
-[Index("Name", Name = "UQ__Property__737584F670B8E38D", IsUnique = true)]
-public partial class PropertyForm
+[Index("Name", Name = "IDX_Subdivisions_Name")]
+public partial class Subdivision
 {
     [Key]
-    [Column("PropertyFormID")]
-    public int PropertyFormId { get; set; }
+    [Column("SubdivisionID")]
+    public int SubdivisionId { get; set; }
 
     [Required]
-    [StringLength(50)]
+    [StringLength(200)]
     public string Name { get; set; }
 
-    [StringLength(255)]
+    [StringLength(100)]
+    public string Type { get; set; }
+
     public string Description { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
-    [InverseProperty("PropertyForm")]
-    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
+    [InverseProperty("Subdivision")]
+    public virtual ICollection<Building> Buildings { get; set; } = new List<Building>();
 }

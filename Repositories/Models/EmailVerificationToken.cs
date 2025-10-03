@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
 [Index("ExpiresAt", Name = "IDX_EmailVerificationTokens_ExpiresAt")]
 [Index("Token", Name = "IDX_EmailVerificationTokens_Token")]

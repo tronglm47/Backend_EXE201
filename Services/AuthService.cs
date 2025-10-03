@@ -169,7 +169,7 @@ namespace Services
                 }
 
                 // Create new user
-                var newUser = new VLivingAPI.Repositories.Data.Models.User
+                var newUser = new VLivingAPI.Repositories.Models.User
                 {
                     Username = request.Username.Trim(),
                     Email = request.Email.Trim().ToLower(),
@@ -500,7 +500,7 @@ namespace Services
             }
         }
 
-        private string GenerateJwtToken(VLivingAPI.Repositories.Data.Models.User user)
+        private string GenerateJwtToken(VLivingAPI.Repositories.Models.User user)
         {
             var jwtKey = _configuration["Jwt:Key"];
             var jwtIssuer = _configuration["Jwt:Issuer"];

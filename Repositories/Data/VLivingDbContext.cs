@@ -4,8 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using VLivingAPI.Repositories.Models;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Data;
 
 public partial class VLivingDbContext : DbContext
 {
@@ -18,23 +19,13 @@ public partial class VLivingDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Activity> Activities { get; set; }
-
-    public virtual DbSet<Ad> Ads { get; set; }
-
-    public virtual DbSet<AdRequest> AdRequests { get; set; }
-
-    public virtual DbSet<Amenity> Amenities { get; set; }
+    public virtual DbSet<Apartment> Apartments { get; set; }
 
     public virtual DbSet<Booking> Bookings { get; set; }
 
+    public virtual DbSet<Building> Buildings { get; set; }
+
     public virtual DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
-
-    public virtual DbSet<Location> Locations { get; set; }
-
-    public virtual DbSet<Message> Messages { get; set; }
-
-    public virtual DbSet<Notification> Notifications { get; set; }
 
     public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
@@ -42,27 +33,19 @@ public partial class VLivingDbContext : DbContext
 
     public virtual DbSet<Post> Posts { get; set; }
 
-    public virtual DbSet<PostAmenity> PostAmenities { get; set; }
-
-    public virtual DbSet<PostReview> PostReviews { get; set; }
-
-    public virtual DbSet<PostType> PostTypes { get; set; }
-
-    public virtual DbSet<PropertyForm> PropertyForms { get; set; }
-
-    public virtual DbSet<PropertyType> PropertyTypes { get; set; }
+    public virtual DbSet<PostUtility> PostUtilities { get; set; }
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
-    public virtual DbSet<RoommateMatch> RoommateMatches { get; set; }
-
-    public virtual DbSet<RoommatePreference> RoommatePreferences { get; set; }
+    public virtual DbSet<Subdivision> Subdivisions { get; set; }
 
     public virtual DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserSubscription> UserSubscriptions { get; set; }
+
+    public virtual DbSet<Utility> Utilities { get; set; }
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()
@@ -82,287 +65,139 @@ public partial class VLivingDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Activity>(entity =>
+        modelBuilder.Entity<Apartment>(entity =>
         {
-            entity.HasKey(e => e.ActivityId).HasName("PK__Activiti__45F4A7F13670F0BE");
+            entity.HasKey(e => e.ApartmentId).HasName("PK__Apartmen__CBDF5744A414ED82");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Status).HasDefaultValue("active");
+            entity.Property(e => e.NumberBathroom).HasDefaultValue(1);
+            entity.Property(e => e.Status).HasDefaultValue("available");
 
-            entity.HasOne(d => d.Creator).WithMany(p => p.Activities)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Activitie__Creat__7BB05806");
-
-            entity.HasOne(d => d.Location).WithMany(p => p.Activities).HasConstraintName("FK__Activitie__Locat__7CA47C3F");
-        });
-
-        modelBuilder.Entity<Ad>(entity =>
-        {
-            entity.HasKey(e => e.AdId).HasName("PK__Ads__7130D58E64C0F4D5");
-
-            entity.Property(e => e.Clicks).HasDefaultValue(0);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Status).HasDefaultValue("active");
-            entity.Property(e => e.Views).HasDefaultValue(0);
-
-            entity.HasOne(d => d.Request).WithMany(p => p.Ads)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Ads__RequestID__24B26D99");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Ads)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Ads__UserID__25A691D2");
-        });
-
-        modelBuilder.Entity<AdRequest>(entity =>
-        {
-            entity.HasKey(e => e.RequestId).HasName("PK__AdReques__33A8519ACDFB1035");
-
-            entity.ToTable(tb => tb.HasTrigger("TR_AdRequest_Approve"));
-
-            entity.Property(e => e.Status).HasDefaultValue("pending");
-            entity.Property(e => e.SubmittedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.User).WithMany(p => p.AdRequests)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__AdRequest__UserI__1E05700A");
-        });
-
-        modelBuilder.Entity<Amenity>(entity =>
-        {
-            entity.HasKey(e => e.AmenityId).HasName("PK__Amenitie__842AF52B68DAA9D8");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.HasOne(d => d.Building).WithMany(p => p.Apartments).HasConstraintName("FK__Apartment__Build__6AA5C795");
         });
 
         modelBuilder.Entity<Booking>(entity =>
         {
-            entity.HasKey(e => e.BookingId).HasName("PK__Bookings__73951ACD05800EBB");
+            entity.HasKey(e => e.BookingId).HasName("PK__Booking__73951ACDF2C9792E");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue("pending");
 
             entity.HasOne(d => d.Post).WithMany(p => p.Bookings)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Bookings__PostID__025D5595");
+                .HasConstraintName("FK__Booking__PostID__7CC477D0");
 
-            entity.HasOne(d => d.User).WithMany(p => p.Bookings)
+            entity.HasOne(d => d.Renter).WithMany(p => p.Bookings)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Bookings__UserID__0169315C");
+                .HasConstraintName("FK__Booking__RenterI__7BD05397");
+        });
+
+        modelBuilder.Entity<Building>(entity =>
+        {
+            entity.HasKey(e => e.BuildingId).HasName("PK__Building__5463CDE4FE3FA25B");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Subdivision).WithMany(p => p.Buildings).HasConstraintName("FK_Buildings_Subdivision");
         });
 
         modelBuilder.Entity<EmailVerificationToken>(entity =>
         {
-            entity.HasKey(e => e.TokenId).HasName("PK__EmailVer__658FEE8A9616A9AC");
+            entity.HasKey(e => e.TokenId).HasName("PK__EmailVer__658FEE8A6F435DE3");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.IsUsed).HasDefaultValue(false);
 
-            entity.HasOne(d => d.User).WithMany(p => p.EmailVerificationTokens).HasConstraintName("FK__EmailVeri__UserI__2B5F6B28");
-        });
-
-        modelBuilder.Entity<Location>(entity =>
-        {
-            entity.HasKey(e => e.LocationId).HasName("PK__Location__E7FEA477FBAAAF27");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.Level).HasDefaultValue(1);
-
-            entity.HasOne(d => d.ParentLocation).WithMany(p => p.InverseParentLocation).HasConstraintName("FK__Locations__Paren__5F141958");
-        });
-
-        modelBuilder.Entity<Message>(entity =>
-        {
-            entity.HasKey(e => e.MessageId).HasName("PK__Messages__C87C037C1BABCEAF");
-
-            entity.Property(e => e.IsRead).HasDefaultValue(false);
-            entity.Property(e => e.SentAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Receiver).WithMany(p => p.MessageReceivers)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Messages__Receiv__08162EEB");
-
-            entity.HasOne(d => d.Sender).WithMany(p => p.MessageSenders)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Messages__Sender__07220AB2");
-        });
-
-        modelBuilder.Entity<Notification>(entity =>
-        {
-            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__20CF2E32D33158D3");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.IsRead).HasDefaultValue(false);
-
-            entity.HasOne(d => d.User).WithMany(p => p.Notifications)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Notificat__UserI__0CDAE408");
+            entity.HasOne(d => d.User).WithMany(p => p.EmailVerificationTokens).HasConstraintName("FK__EmailVeri__UserI__53C2623D");
         });
 
         modelBuilder.Entity<PasswordResetToken>(entity =>
         {
-            entity.HasKey(e => e.TokenId).HasName("PK__Password__658FEE8A32C2CB3B");
+            entity.HasKey(e => e.TokenId).HasName("PK__Password__658FEE8AFE6FBA53");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.IsUsed).HasDefaultValue(false);
 
-            entity.HasOne(d => d.User).WithMany(p => p.PasswordResetTokens).HasConstraintName("FK__PasswordR__UserI__30242045");
+            entity.HasOne(d => d.User).WithMany(p => p.PasswordResetTokens).HasConstraintName("FK__PasswordR__UserI__5887175A");
         });
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A581BF5BE94");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A584983FBEA");
 
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue("pending");
-
-            entity.HasOne(d => d.Booking).WithMany(p => p.Payments).HasConstraintName("FK__Payments__Bookin__1940BAED");
-
-            entity.HasOne(d => d.Subscription).WithMany(p => p.Payments).HasConstraintName("FK__Payments__Subscr__184C96B4");
 
             entity.HasOne(d => d.User).WithMany(p => p.Payments)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Payments__UserID__1758727B");
+                .HasConstraintName("FK_Payments_User");
+
+            entity.HasOne(d => d.UserSub).WithMany(p => p.Payments).HasConstraintName("FK_Payments_UserSub");
         });
 
         modelBuilder.Entity<Post>(entity =>
         {
-            entity.HasKey(e => e.PostId).HasName("PK__Posts__AA1260384F498F68");
+            entity.HasKey(e => e.PostId).HasName("PK__Posts__AA12603836760C7F");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.Status).HasDefaultValue("active");
-            entity.Property(e => e.Views).HasDefaultValue(0);
 
-            entity.HasOne(d => d.Location).WithMany(p => p.Posts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Posts__LocationI__6A85CC04");
-
-            entity.HasOne(d => d.PostType).WithMany(p => p.Posts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Posts__PostTypeI__67A95F59");
-
-            entity.HasOne(d => d.PropertyForm).WithMany(p => p.Posts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Posts__PropertyF__6991A7CB");
-
-            entity.HasOne(d => d.PropertyType).WithMany(p => p.Posts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Posts__PropertyT__689D8392");
+            entity.HasOne(d => d.Apartment).WithMany(p => p.Posts).HasConstraintName("FK__Posts__Apartment__733B0D96");
 
             entity.HasOne(d => d.User).WithMany(p => p.Posts)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Posts__UserID__66B53B20");
+                .HasConstraintName("FK__Posts__UserID__7246E95D");
         });
 
-        modelBuilder.Entity<PostAmenity>(entity =>
+        modelBuilder.Entity<PostUtility>(entity =>
         {
-            entity.HasKey(e => new { e.PostId, e.AmenityId }).HasName("PK__PostAmen__0250CF6A5BC1B1B8");
+            entity.HasKey(e => new { e.PostId, e.UtilityId }).HasName("PK__PostUtil__42A582DB32AB2B8D");
 
-            entity.HasOne(d => d.Amenity).WithMany(p => p.PostAmenities).HasConstraintName("FK__PostAmeni__Ameni__3C89F72A");
+            entity.HasOne(d => d.Post).WithMany(p => p.PostUtilities).HasConstraintName("FK__PostUtili__PostI__76177A41");
 
-            entity.HasOne(d => d.Post).WithMany(p => p.PostAmenities).HasConstraintName("FK__PostAmeni__PostI__3B95D2F1");
-        });
-
-        modelBuilder.Entity<PostReview>(entity =>
-        {
-            entity.HasKey(e => e.ReviewId).HasName("PK__PostRevi__74BC79AE332732E6");
-
-            entity.Property(e => e.IsVerified).HasDefaultValue(false);
-            entity.Property(e => e.ReviewDate).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Booking).WithMany(p => p.PostReviews).HasConstraintName("FK__PostRevie__Booki__442B18F2");
-
-            entity.HasOne(d => d.Post).WithMany(p => p.PostReviews)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostRevie__PostI__4242D080");
-
-            entity.HasOne(d => d.Reviewer).WithMany(p => p.PostReviews)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PostRevie__Revie__4336F4B9");
-        });
-
-        modelBuilder.Entity<PostType>(entity =>
-        {
-            entity.HasKey(e => e.PostTypeId).HasName("PK__PostType__AB212610CE230A57");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-        });
-
-        modelBuilder.Entity<PropertyForm>(entity =>
-        {
-            entity.HasKey(e => e.PropertyFormId).HasName("PK__Property__56B70EC31113FE2A");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-        });
-
-        modelBuilder.Entity<PropertyType>(entity =>
-        {
-            entity.HasKey(e => e.PropertyTypeId).HasName("PK__Property__BDE14DD4C2559C93");
-
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.HasOne(d => d.Utility).WithMany(p => p.PostUtilities).HasConstraintName("FK__PostUtili__Utili__770B9E7A");
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {
-            entity.HasKey(e => e.RefreshTokenId).HasName("PK__RefreshT__F5845E594D9D1D1A");
+            entity.HasKey(e => e.RefreshTokenId).HasName("PK__RefreshT__F5845E5949948F1E");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.IsRevoked).HasDefaultValue(false);
 
-            entity.HasOne(d => d.User).WithMany(p => p.RefreshTokens).HasConstraintName("FK__RefreshTo__UserI__34E8D562");
+            entity.HasOne(d => d.User).WithMany(p => p.RefreshTokens).HasConstraintName("FK__RefreshTo__UserI__5D4BCC77");
         });
 
-        modelBuilder.Entity<RoommateMatch>(entity =>
+        modelBuilder.Entity<Subdivision>(entity =>
         {
-            entity.HasKey(e => e.MatchId).HasName("PK__Roommate__4218C837748D8D50");
+            entity.HasKey(e => e.SubdivisionId).HasName("PK__Subdivis__72F876DFF9DB3E69");
 
-            entity.Property(e => e.MatchedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.Status).HasDefaultValue("pending");
-
-            entity.HasOne(d => d.UserId1Navigation).WithMany(p => p.RoommateMatchUserId1Navigations)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__RoommateM__UserI__75F77EB0");
-
-            entity.HasOne(d => d.UserId2Navigation).WithMany(p => p.RoommateMatchUserId2Navigations)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__RoommateM__UserI__76EBA2E9");
-        });
-
-        modelBuilder.Entity<RoommatePreference>(entity =>
-        {
-            entity.HasKey(e => e.PreferenceId).HasName("PK__Roommate__E228490FE6CAD0AD");
-
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Location).WithMany(p => p.RoommatePreferences).HasConstraintName("FK__RoommateP__Locat__703EA55A");
-
-            entity.HasOne(d => d.User).WithOne(p => p.RoommatePreference)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__RoommateP__UserI__6F4A8121");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
         });
 
         modelBuilder.Entity<SubscriptionPlan>(entity =>
         {
-            entity.HasKey(e => e.PlanId).HasName("PK__Subscrip__755C22D7C2B220CB");
+            entity.HasKey(e => e.PlanId).HasName("PK__Subscrip__755C22D76B9A37E6");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
             entity.Property(e => e.DurationMonths).HasDefaultValue(1);
+            entity.Property(e => e.MaxPosts).HasDefaultValue(0);
+            entity.Property(e => e.Priority).HasDefaultValue(0);
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCAC974EE360");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCAC13E46865");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.IsAdvertiserApproved).HasDefaultValue(false);
             entity.Property(e => e.IsEmailVerified).HasDefaultValue(false);
 
-            entity.HasOne(d => d.SubscriptionPlan).WithMany(p => p.Users).HasConstraintName("FK__Users__Subscript__595B4002");
+            entity.HasOne(d => d.SubscriptionPlan).WithMany(p => p.Users).HasConstraintName("FK__Users__Subscript__4297D63B");
         });
 
         modelBuilder.Entity<UserSubscription>(entity =>
         {
-            entity.HasKey(e => e.SubscriptionId).HasName("PK__UserSubs__9A2B24BDB57C69D6");
+            entity.HasKey(e => e.SubscriptionId).HasName("PK__UserSubs__9A2B24BD852A0766");
 
             entity.Property(e => e.AutoRenew).HasDefaultValue(true);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
@@ -370,11 +205,18 @@ public partial class VLivingDbContext : DbContext
 
             entity.HasOne(d => d.Plan).WithMany(p => p.UserSubscriptions)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__UserSubsc__PlanI__1387E197");
+                .HasConstraintName("FK_UserSubscriptions_Plan");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserSubscriptions)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__UserSubsc__UserI__1293BD5E");
+                .HasConstraintName("FK_UserSubscriptions_User");
+        });
+
+        modelBuilder.Entity<Utility>(entity =>
+        {
+            entity.HasKey(e => e.UtilityId).HasName("PK__Utilitie__8B7E2E3FD0894524");
+
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
         });
 
         OnModelCreatingPartial(modelBuilder);

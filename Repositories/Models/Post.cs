@@ -6,15 +6,11 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
-[Index("CreatedAt", Name = "IDX_Posts_CreatedAt")]
-[Index("LocationId", Name = "IDX_Posts_LocationID")]
-[Index("PostTypeId", Name = "IDX_Posts_PostTypeID")]
-[Index("Price", Name = "IDX_Posts_Price")]
-[Index("PropertyFormId", Name = "IDX_Posts_PropertyFormID")]
-[Index("PropertyTypeId", Name = "IDX_Posts_PropertyTypeID")]
+[Index("ApartmentId", Name = "IDX_Posts_ApartmentID")]
 [Index("Status", Name = "IDX_Posts_Status")]
+[Index("UserId", Name = "IDX_Posts_UserID")]
 public partial class Post
 {
     [Key]
@@ -24,61 +20,36 @@ public partial class Post
     [Column("UserID")]
     public int UserId { get; set; }
 
-    [Column("PostTypeID")]
-    public int PostTypeId { get; set; }
-
-    [Column("PropertyTypeID")]
-    public int PropertyTypeId { get; set; }
-
-    [Column("PropertyFormID")]
-    public int PropertyFormId { get; set; }
-
-    [Column("LocationID")]
-    public int LocationId { get; set; }
+    [Column("ApartmentID")]
+    public int? ApartmentId { get; set; }
 
     [Required]
     [StringLength(200)]
     public string Title { get; set; }
 
-    public string Content { get; set; }
-
-    public string Images { get; set; }
+    public string Description { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
     public decimal? Price { get; set; }
 
-    [StringLength(20)]
+    [StringLength(50)]
+    public string PostType { get; set; }
+
+    [StringLength(50)]
     public string Status { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
-    public int? Views { get; set; }
+    [ForeignKey("ApartmentId")]
+    [InverseProperty("Posts")]
+    public virtual Apartment Apartment { get; set; }
 
     [InverseProperty("Post")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-    [ForeignKey("LocationId")]
-    [InverseProperty("Posts")]
-    public virtual Location Location { get; set; }
-
     [InverseProperty("Post")]
-    public virtual ICollection<PostAmenity> PostAmenities { get; set; } = new List<PostAmenity>();
-
-    [InverseProperty("Post")]
-    public virtual ICollection<PostReview> PostReviews { get; set; } = new List<PostReview>();
-
-    [ForeignKey("PostTypeId")]
-    [InverseProperty("Posts")]
-    public virtual PostType PostType { get; set; }
-
-    [ForeignKey("PropertyFormId")]
-    [InverseProperty("Posts")]
-    public virtual PropertyForm PropertyForm { get; set; }
-
-    [ForeignKey("PropertyTypeId")]
-    [InverseProperty("Posts")]
-    public virtual PropertyType PropertyType { get; set; }
+    public virtual ICollection<PostUtility> PostUtilities { get; set; } = new List<PostUtility>();
 
     [ForeignKey("UserId")]
     [InverseProperty("Posts")]

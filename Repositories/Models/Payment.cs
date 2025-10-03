@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
 [Index("Status", Name = "IDX_Payments_Status")]
 [Index("UserId", Name = "IDX_Payments_UserID")]
@@ -19,11 +19,8 @@ public partial class Payment
     [Column("UserID")]
     public int UserId { get; set; }
 
-    [Column("SubscriptionID")]
-    public int? SubscriptionId { get; set; }
-
-    [Column("BookingID")]
-    public int? BookingId { get; set; }
+    [Column("UserSubID")]
+    public int? UserSubId { get; set; }
 
     [Column(TypeName = "decimal(18, 2)")]
     public decimal Amount { get; set; }
@@ -41,15 +38,14 @@ public partial class Payment
     [Column(TypeName = "datetime")]
     public DateTime? PaidAt { get; set; }
 
-    [ForeignKey("BookingId")]
-    [InverseProperty("Payments")]
-    public virtual Booking Booking { get; set; }
-
-    [ForeignKey("SubscriptionId")]
-    [InverseProperty("Payments")]
-    public virtual UserSubscription Subscription { get; set; }
+    [Column(TypeName = "datetime")]
+    public DateTime? CreatedAt { get; set; }
 
     [ForeignKey("UserId")]
     [InverseProperty("Payments")]
     public virtual User User { get; set; }
+
+    [ForeignKey("UserSubId")]
+    [InverseProperty("Payments")]
+    public virtual UserSubscription UserSub { get; set; }
 }

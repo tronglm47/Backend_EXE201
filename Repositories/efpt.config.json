@@ -6,49 +6,29 @@
    "IncludeConnectionString": true,
    "MinimumProductVersion": "2.6.1166",
    "ModelNamespace": null,
-   "OutputContextPath": null,
+   "OutputContextPath": "Data",
    "OutputPath": "Models",
    "PreserveCasingWithRegex": true,
-   "ProjectRootNamespace": "VLivingAPI.Repositories.Data",
+   "ProjectRootNamespace": "VLivingAPI.Repositories",
    "Schemas": null,
    "SelectedHandlebarsLanguage": 2,
    "SelectedToBeGenerated": 0,
    "T4TemplatePath": null,
    "Tables": [
       {
-         "Name": "[dbo].[Activities]",
+         "Name": "[dbo].[Apartments]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[AdRequests]",
+         "Name": "[dbo].[Booking]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Ads]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Amenities]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Bookings]",
+         "Name": "[dbo].[Buildings]",
          "ObjectType": 0
       },
       {
          "Name": "[dbo].[EmailVerificationTokens]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Locations]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Messages]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Notifications]",
          "ObjectType": 0
       },
       {
@@ -60,27 +40,11 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[PostAmenities]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PostReviews]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Posts]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[PostTypes]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PropertyForms]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[PropertyTypes]",
+         "Name": "[dbo].[PostUtility]",
          "ObjectType": 0
       },
       {
@@ -88,11 +52,7 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[RoommateMatches]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[RoommatePreferences]",
+         "Name": "[dbo].[Subdivisions]",
          "ObjectType": 0
       },
       {
@@ -105,6 +65,10 @@
       },
       {
          "Name": "[dbo].[UserSubscriptions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Utilities]",
          "ObjectType": 0
       }
    ],

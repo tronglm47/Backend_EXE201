@@ -6,54 +6,40 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
-[Index("PostId", Name = "IDX_Bookings_PostID")]
-[Index("Status", Name = "IDX_Bookings_Status")]
-[Index("UserId", Name = "IDX_Bookings_UserID")]
+[Table("Booking")]
+[Index("PostId", Name = "IDX_Booking_PostID")]
+[Index("RenterId", Name = "IDX_Booking_RenterID")]
 public partial class Booking
 {
     [Key]
     [Column("BookingID")]
     public int BookingId { get; set; }
 
-    [Column("UserID")]
-    public int UserId { get; set; }
+    [Column("RenterID")]
+    public int RenterId { get; set; }
 
     [Column("PostID")]
     public int PostId { get; set; }
 
-    [Required]
-    [StringLength(20)]
-    public string Type { get; set; }
+    [Column(TypeName = "datetime")]
+    public DateTime? MeetingTime { get; set; }
 
-    public DateOnly? StartDate { get; set; }
-
-    public DateOnly? EndDate { get; set; }
-
-    [Column(TypeName = "decimal(18, 2)")]
-    public decimal? Amount { get; set; }
-
-    [StringLength(20)]
-    public string Status { get; set; }
+    [StringLength(255)]
+    public string PlaceMeet { get; set; }
 
     [StringLength(50)]
-    public string PaymentMethod { get; set; }
+    public string Status { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
-
-    [InverseProperty("Booking")]
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
     [ForeignKey("PostId")]
     [InverseProperty("Bookings")]
     public virtual Post Post { get; set; }
 
-    [InverseProperty("Booking")]
-    public virtual ICollection<PostReview> PostReviews { get; set; } = new List<PostReview>();
-
-    [ForeignKey("UserId")]
+    [ForeignKey("RenterId")]
     [InverseProperty("Bookings")]
-    public virtual User User { get; set; }
+    public virtual User Renter { get; set; }
 }

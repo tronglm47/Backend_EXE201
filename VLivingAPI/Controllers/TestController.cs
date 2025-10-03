@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using VLivingAPI.Repositories.Data.Models;
+using VLivingAPI.Repositories.Data;
 
 namespace VLivingAPI.Controllers
 {

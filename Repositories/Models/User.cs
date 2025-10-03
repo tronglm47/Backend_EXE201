@@ -6,14 +6,14 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
 [Index("Email", Name = "IDX_Users_Email")]
 [Index("IsEmailVerified", Name = "IDX_Users_IsEmailVerified")]
 [Index("Role", Name = "IDX_Users_Role")]
 [Index("SubscriptionPlanId", Name = "IDX_Users_SubscriptionPlanID")]
-[Index("Username", Name = "UQ__Users__536C85E415C98EF1", IsUnique = true)]
-[Index("Email", Name = "UQ__Users__A9D1053457D42AE9", IsUnique = true)]
+[Index("Username", Name = "UQ__Users__536C85E4330739A1", IsUnique = true)]
+[Index("Email", Name = "UQ__Users__A9D105341799B8C1", IsUnique = true)]
 public partial class User
 {
     [Key]
@@ -52,8 +52,6 @@ public partial class User
     [Column("SubscriptionPlanID")]
     public int? SubscriptionPlanId { get; set; }
 
-    public bool? IsAdvertiserApproved { get; set; }
-
     public bool? IsEmailVerified { get; set; }
 
     [Column(TypeName = "datetime")]
@@ -62,29 +60,11 @@ public partial class User
     [Column(TypeName = "datetime")]
     public DateTime? LastLogin { get; set; }
 
-    [InverseProperty("Creator")]
-    public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
-
-    [InverseProperty("User")]
-    public virtual ICollection<AdRequest> AdRequests { get; set; } = new List<AdRequest>();
-
-    [InverseProperty("User")]
-    public virtual ICollection<Ad> Ads { get; set; } = new List<Ad>();
-
-    [InverseProperty("User")]
+    [InverseProperty("Renter")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     [InverseProperty("User")]
     public virtual ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
-
-    [InverseProperty("Receiver")]
-    public virtual ICollection<Message> MessageReceivers { get; set; } = new List<Message>();
-
-    [InverseProperty("Sender")]
-    public virtual ICollection<Message> MessageSenders { get; set; } = new List<Message>();
-
-    [InverseProperty("User")]
-    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     [InverseProperty("User")]
     public virtual ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
@@ -92,23 +72,11 @@ public partial class User
     [InverseProperty("User")]
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
-    [InverseProperty("Reviewer")]
-    public virtual ICollection<PostReview> PostReviews { get; set; } = new List<PostReview>();
-
     [InverseProperty("User")]
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     [InverseProperty("User")]
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
-
-    [InverseProperty("UserId1Navigation")]
-    public virtual ICollection<RoommateMatch> RoommateMatchUserId1Navigations { get; set; } = new List<RoommateMatch>();
-
-    [InverseProperty("UserId2Navigation")]
-    public virtual ICollection<RoommateMatch> RoommateMatchUserId2Navigations { get; set; } = new List<RoommateMatch>();
-
-    [InverseProperty("User")]
-    public virtual RoommatePreference RoommatePreference { get; set; }
 
     [ForeignKey("SubscriptionPlanId")]
     [InverseProperty("Users")]

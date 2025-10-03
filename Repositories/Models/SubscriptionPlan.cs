@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
 [Index("Name", Name = "IDX_SubscriptionPlans_Name")]
 public partial class SubscriptionPlan
@@ -23,6 +23,10 @@ public partial class SubscriptionPlan
 
     [Column(TypeName = "decimal(18, 2)")]
     public decimal MonthlyPrice { get; set; }
+
+    public int? MaxPosts { get; set; }
+
+    public int? Priority { get; set; }
 
     public string Features { get; set; }
 

@@ -10,27 +10,27 @@ namespace VLivingAPI.Authorization
     {
         public BusinessAuthorizeAttribute(BusinessRole businessRole)
         {
-            switch (businessRole)
-            {
-                case BusinessRole.MasterDataManagement:
-                    Roles = UserRoleConstants.BusinessRoles.MasterDataManagement;
-                    break;
-                case BusinessRole.PostManagement:
-                    Roles = UserRoleConstants.BusinessRoles.PostManagement;
-                    break;
-                case BusinessRole.ReadOnlyAccess:
-                    Roles = UserRoleConstants.BusinessRoles.ReadOnlyAccess;
-                    break;
-                case BusinessRole.FullSystemAccess:
-                    Roles = UserRoleConstants.BusinessRoles.FullSystemAccess;
-                    break;
-                case BusinessRole.ContentModeration:
-                    Roles = UserRoleConstants.BusinessRoles.ContentModeration;
-                    break;
-                default:
-                    Roles = UserRoleConstants.UserRole;
-                    break;
-            }
+            //switch (businessRole)
+            //{
+            //    case BusinessRole.MasterDataManagement:
+            //        Roles = UserRoleConstants.BusinessRoles.MasterDataManagement;
+            //        break;
+            //    case BusinessRole.PostManagement:
+            //        Roles = UserRoleConstants.BusinessRoles.PostManagement;
+            //        break;
+            //    case BusinessRole.ReadOnlyAccess:
+            //        Roles = UserRoleConstants.BusinessRoles.ReadOnlyAccess;
+            //        break;
+            //    case BusinessRole.FullSystemAccess:
+            //        Roles = UserRoleConstants.BusinessRoles.FullSystemAccess;
+            //        break;
+            //    case BusinessRole.ContentModeration:
+            //        Roles = UserRoleConstants.BusinessRoles.ContentModeration;
+            //        break;
+            //    default:
+            //        Roles = UserRoleConstants.UserRole;
+            //        break;
+            //}
         }
     }
 

@@ -6,29 +6,30 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
-[PrimaryKey("PostId", "AmenityId")]
-[Index("AmenityId", Name = "IDX_PostAmenities_AmenityID")]
-[Index("PostId", Name = "IDX_PostAmenities_PostID")]
-public partial class PostAmenity
+[PrimaryKey("PostId", "UtilityId")]
+[Table("PostUtility")]
+[Index("PostId", Name = "IDX_PostUtility_PostID")]
+[Index("UtilityId", Name = "IDX_PostUtility_UtilityID")]
+public partial class PostUtility
 {
     [Key]
     [Column("PostID")]
     public int PostId { get; set; }
 
     [Key]
-    [Column("AmenityID")]
-    public int AmenityId { get; set; }
+    [Column("UtilityID")]
+    public int UtilityId { get; set; }
 
     [StringLength(255)]
     public string Notes { get; set; }
 
-    [ForeignKey("AmenityId")]
-    [InverseProperty("PostAmenities")]
-    public virtual Amenity Amenity { get; set; }
-
     [ForeignKey("PostId")]
-    [InverseProperty("PostAmenities")]
+    [InverseProperty("PostUtilities")]
     public virtual Post Post { get; set; }
+
+    [ForeignKey("UtilityId")]
+    [InverseProperty("PostUtilities")]
+    public virtual Utility Utility { get; set; }
 }

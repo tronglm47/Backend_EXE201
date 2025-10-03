@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Data.Models;
+namespace VLivingAPI.Repositories.Models;
 
 [Index("Status", Name = "IDX_UserSubscriptions_Status")]
 [Index("UserId", Name = "IDX_UserSubscriptions_UserID")]
@@ -36,7 +36,7 @@ public partial class UserSubscription
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
-    [InverseProperty("Subscription")]
+    [InverseProperty("UserSub")]
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
     [ForeignKey("PlanId")]

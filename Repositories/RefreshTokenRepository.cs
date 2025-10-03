@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using VLivingAPI.Repositories.Data.Models;
+using VLivingAPI.Repositories.Models;
+using VLivingAPI.Repositories.Data;
 
 namespace Repositories
 {
