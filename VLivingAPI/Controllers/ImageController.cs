@@ -20,10 +20,11 @@ namespace VLivingAPI.Controllers
         }
 
         /// <summary>
-        /// Upload single image for posts
+        /// Upload single image for any entity type
         /// </summary>
         /// <param name="file">Image file to upload</param>
-        /// <param name="folder">Optional folder path (default: posts)</param>
+        /// <param name="entityType">Entity type (posts, users, properties, ads, etc.)</param>
+        /// <param name="entityId">Optional entity ID for better organization</param>
         /// <returns>Image URL</returns>
         [HttpPost("upload")]
         [BusinessAuthorize(BusinessRole.PostManagement)]
@@ -32,9 +33,7 @@ namespace VLivingAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UploadImage(
-            [FromForm] IFormFile file, 
-            [FromForm] string folder = "posts")
+        public async Task<IActionResult> UploadImage(IFormFile file, string entityType = "posts", int? entityId = null)
         {
             try
             {
@@ -47,7 +46,18 @@ namespace VLivingAPI.Controllers
                     });
                 }
 
-                var imageUrl = await _cloudStorageService.UploadImageAsync(file, folder);
+                // Validate entity type
+                var allowedEntityTypes = new[] { "posts", "users", "properties", "ads", "reviews", "amenities", "notifications" };
+                if (!allowedEntityTypes.Contains(entityType.ToLower()))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = $"Invalid entity type. Allowed types: {string.Join(", ", allowedEntityTypes)}"
+                    });
+                }
+
+                var imageUrl = await _cloudStorageService.UploadImageAsync(file, entityType.ToLower(), entityId);
 
                 return Ok(new
                 {
@@ -76,10 +86,11 @@ namespace VLivingAPI.Controllers
         }
 
         /// <summary>
-        /// Upload multiple images for posts
+        /// Upload multiple images for any entity type
         /// </summary>
         /// <param name="files">Array of image files to upload</param>
-        /// <param name="folder">Optional folder path (default: posts)</param>
+        /// <param name="entityType">Entity type (posts, users, properties, ads, etc.)</param>
+        /// <param name="entityId">Optional entity ID for better organization</param>
         /// <returns>Array of image URLs</returns>
         [HttpPost("upload-multiple")]
         [BusinessAuthorize(BusinessRole.PostManagement)]
@@ -90,7 +101,8 @@ namespace VLivingAPI.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UploadMultipleImages(
             [FromForm] List<IFormFile> files, 
-            [FromForm] string folder = "posts")
+            [FromForm] string entityType = "posts",
+            [FromForm] int? entityId = null)
         {
             try
             {
@@ -113,13 +125,23 @@ namespace VLivingAPI.Controllers
                     });
                 }
 
-                var uploadTasks = files.Select(file => _cloudStorageService.UploadImageAsync(file, folder));
-                var imageUrls = await Task.WhenAll(uploadTasks);
+                // Validate entity type
+                var allowedEntityTypes = new[] { "posts", "users", "properties", "ads", "reviews", "amenities", "notifications" };
+                if (!allowedEntityTypes.Contains(entityType.ToLower()))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = $"Invalid entity type. Allowed types: {string.Join(", ", allowedEntityTypes)}"
+                    });
+                }
+
+                var imageUrls = await _cloudStorageService.UploadMultipleImagesAsync(files, entityType.ToLower(), entityId);
 
                 return Ok(new
                 {
                     success = true,
-                    message = $"Successfully uploaded {imageUrls.Length} images",
+                    message = $"Successfully uploaded {imageUrls.Count} images",
                     data = new { imageUrls }
                 });
             }
@@ -140,6 +162,44 @@ namespace VLivingAPI.Controllers
                     message = "Internal server error occurred while uploading images"
                 });
             }
+        }
+
+        /// <summary>
+        /// Get information about folder structure for image organization
+        /// </summary>
+        /// <returns>Folder structure explanation</returns>
+        [HttpGet("folder-structure")]
+        [AllowAnonymous]
+        public IActionResult GetFolderStructure()
+        {
+            var folderStructure = new
+            {
+                description = "Image folder structure in Google Cloud Storage",
+                pattern = "{entityType}/{yyyy}/{MM}/{dd}/{entityId?}/filename.ext",
+                examples = new
+                {
+                    posts = new
+                    {
+                        withEntityId = "posts/2024/09/30/123/abc123-image.jpg",
+                        withoutEntityId = "posts/2024/09/30/abc123-image.jpg"
+                    },
+                    users = new
+                    {
+                        withEntityId = "users/2024/09/30/456/def456-avatar.png",
+                        withoutEntityId = "users/2024/09/30/def456-avatar.png"
+                    },
+                    properties = new
+                    {
+                        withEntityId = "properties/2024/09/30/789/ghi789-property.jpg",
+                        withoutEntityId = "properties/2024/09/30/ghi789-property.jpg"
+                    }
+                },
+                allowedEntityTypes = new[] { "posts", "users", "properties", "ads", "reviews", "amenities", "notifications" },
+                bucketName = "vliving-storage-bucket",
+                publicUrlPattern = "https://storage.googleapis.com/vliving-storage-bucket/{path}"
+            };
+
+            return Ok(folderStructure);
         }
 
         /// <summary>

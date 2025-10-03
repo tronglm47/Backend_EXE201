@@ -13,7 +13,7 @@ namespace Services
 {
     public interface IAuthService
     {
-        Task<LoginResponse> LoginAsync(string username, string password);
+        Task<LoginResponse> LoginAsync(string usernameOrEmail, string password);
         Task<UserResponse> GetUserInfoAsync(int userId);
         Task<RegisterResponse> RegisterAsync(RegisterRequest request);
         Task<LoginResponse> RefreshTokenAsync(string refreshToken);
@@ -53,30 +53,43 @@ namespace Services
             _logger = logger;
         }
 
-        public async Task<LoginResponse> LoginAsync(string username, string password)
+        public async Task<LoginResponse> LoginAsync(string usernameOrEmail, string password)
         {
-            _logger.LogInformation("Login attempt for username: {Username}", username);
+            _logger.LogInformation("Login attempt for username/email: {UsernameOrEmail}", usernameOrEmail);
             
             try
             {
-                var user = await _userRepo.GetByUsernameAsync(username);
+                VLivingAPI.Repositories.Data.Models.User? user = null;
+                
+                // Check if input is email format
+                if (usernameOrEmail.Contains("@"))
+                {
+                    _logger.LogInformation("Login attempt using email format: {Email}", usernameOrEmail);
+                    user = await _userRepo.GetByEmailAsync(usernameOrEmail);
+                }
+                else
+                {
+                    _logger.LogInformation("Login attempt using username format: {Username}", usernameOrEmail);
+                    user = await _userRepo.GetByUsernameAsync(usernameOrEmail);
+                }
+
                 if (user == null)
                 {
-                    _logger.LogWarning("Login failed: User not found for username: {Username}", username);
+                    _logger.LogWarning("Login failed: User not found for username/email: {UsernameOrEmail}", usernameOrEmail);
                     throw new UnauthorizedAccessException("Invalid credentials");
                 }
 
                 // Simple password comparison (not secure, but simple)
                 if (user.Password != password)
                 {
-                    _logger.LogWarning("Login failed: Invalid password for username: {Username}", username);
+                    _logger.LogWarning("Login failed: Invalid password for username/email: {UsernameOrEmail}", usernameOrEmail);
                     throw new UnauthorizedAccessException("Invalid credentials");
                 }
 
                 // Check if email is verified
                 if (user.IsEmailVerified != true)
                 {
-                    _logger.LogWarning("Login failed: Email not verified for username: {Username}", username);
+                    _logger.LogWarning("Login failed: Email not verified for username/email: {UsernameOrEmail}", usernameOrEmail);
                     throw new UnauthorizedAccessException("Please verify your email before logging in");
                 }
 
@@ -91,7 +104,7 @@ namespace Services
                 // Save refresh token to database
                 await _refreshTokenRepo.CreateTokenAsync(user.UserId, refreshToken, refreshTokenExpiry);
 
-                _logger.LogInformation("Login successful for username: {Username}", username);
+                _logger.LogInformation("Login successful for username/email: {UsernameOrEmail}, UserId: {UserId}", usernameOrEmail, user.UserId);
 
                 return new LoginResponse
                 {
@@ -107,7 +120,7 @@ namespace Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during login for username: {Username}", username);
+                _logger.LogError(ex, "Error during login for username/email: {UsernameOrEmail}", usernameOrEmail);
                 throw new Exception("An error occurred during login");
             }
         }

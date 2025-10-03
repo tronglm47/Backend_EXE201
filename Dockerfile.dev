@@ -1,0 +1,32 @@
+# Dockerfile cho development
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy project files
+COPY ["VLivingAPI/VLivingAPI.csproj", "VLivingAPI/"]
+COPY ["Services/Services.csproj", "Services/"]
+COPY ["Repositories/Repositories.csproj", "Repositories/"]
+
+RUN dotnet restore "VLivingAPI/VLivingAPI.csproj"
+
+# Copy source code
+COPY . .
+
+# Build application
+WORKDIR "/src/VLivingAPI"
+RUN dotnet build "VLivingAPI.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "VLivingAPI.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+COPY ["VLivingAPI/valiant-index-438307-p0-65335d65d5f5.json", "./"]
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "VLivingAPI.dll"]
