@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  vliving-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # Database connection
+      - ConnectionStrings__DefaultConnection=${DATABASE_CONNECTION_STRING}
+      # JWT Configuration
+      - JWT__Key=${JWT_SECRET_KEY}
+      - JWT__Issuer=${JWT_ISSUER}
+      - JWT__Audience=${JWT_AUDIENCE}
+      - JWT__ExpiryInMinutes=60
+      # Email Configuration
+      - EmailSettings__SmtpServer=smtp.gmail.com
+      - EmailSettings__SmtpPort=587
+      - EmailSettings__Username=${EMAIL_USERNAME}
+      - EmailSettings__Password=${EMAIL_PASSWORD}
+      - EmailSettings__FromEmail=${EMAIL_FROM}
+      - EmailSettings__FromName=VLiving Team
+      - EmailSettings__EnableSsl=true
+      - EmailSettings__BaseUrl=${BASE_URL}
+      - EmailSettings__DeleteTokenAfterUse=true
+      # Google Cloud Storage
+      - GoogleCloudStorage__BucketName=${GCS_BUCKET_NAME}
+      - GoogleCloudStorage__ProjectId=${GCS_PROJECT_ID}
+      - GoogleCloudStorage__UseEnvironmentCredentials=false
+      - GoogleCloudStorage__CredentialPath=./valiant-index-438307-p0-65335d65d5f5.json
+    volumes:
+      - app-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  app-data:

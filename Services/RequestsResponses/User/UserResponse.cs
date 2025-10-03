@@ -10,6 +10,5 @@
         public string? PhoneNumber { get; set; }
         public string? ProfilePictureURL { get; set; }
         public string? Bio { get; set; }
-        // Thêm các fields khác từ table Users nếu cần, trừ PasswordHash và các sensitive khác
     }
 }

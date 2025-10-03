@@ -10,5 +10,6 @@ namespace Services.Models
         public string FromName { get; set; } = string.Empty;
         public bool EnableSsl { get; set; } = true;
         public string BaseUrl { get; set; } = string.Empty; // For email links
+
     }
 }

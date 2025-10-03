@@ -13,9 +13,9 @@ namespace VLivingAPI.Controllers
     [ApiController]
     public class PostAmenityController : ControllerBase
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<PostAmenityController> _logger;
         private readonly IPostAmenityService _service;
-        public PostAmenityController(ILogger logger, IPostAmenityService service)
+        public PostAmenityController(ILogger<PostAmenityController> logger, IPostAmenityService service)
         {
             _logger = logger;
             _service = service;

@@ -387,6 +387,11 @@ appsettings.json
 appsettings.*.json
 !appsettings.Example.json
 
+# VLiving specific - ignore deployment files
+publish-filtered/
+VLivingAPI-deployment-*.zip
+*.zip
+
 # VLiving specific - ignore local development files
 Note/
 Notes/
@@ -396,7 +401,42 @@ vliving-service-account*.json
 google-service-account.json
 google-credentials.json
 credentials.json
+valiant-index-438307-p0-*.json
 
-# Deployment scripts with sensitive data
-deploy.ps1
-deploy.sh
+# VLiving specific - ignore AWS deployment files
+aws/deploy.ps1
+aws/deploy.sh
+.aws/
+.azure/
+
+# VLiving specific - ignore Docker files if not needed
+docker-compose.override.yml
+.dockerignore
+
+# VLiving specific - ignore backup and temporary files
+*.backup
+*.bak
+*.tmp
+Deloy.txt
+Deploy.txt
+deploy*.txt
+DEPLOYMENT*.md
+AWS-DEPLOYMENT*.md
+POST_API*.md
+LOCATION_*.md
+QUICK-START.md
+!README.md
+
+# VLiving specific - ignore IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# VLiving specific - ignore logs and debugging
+logs/
+*.log
+*.log.*
+debug.log
+error.log

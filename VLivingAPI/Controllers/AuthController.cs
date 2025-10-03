@@ -26,7 +26,7 @@ namespace VLivingAPI.Controllers
             // Validate model state
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Login request validation failed for username: {Username}", request?.Username);
+                _logger.LogWarning("Login request validation failed for username/email: {Username}", request?.Username);
                 return BadRequest(ModelState);
             }
 
@@ -34,25 +34,25 @@ namespace VLivingAPI.Controllers
             if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
             {
                 _logger.LogWarning("Login request with empty credentials from IP: {IP}", HttpContext.Connection.RemoteIpAddress);
-                return BadRequest(new { message = "Username and password are required" });
+                return BadRequest(new { message = "Email/Username and password are required" });
             }
 
             try
             {
                 var loginResponse = await _authService.LoginAsync(request.Username.Trim(), request.Password);
                 
-                _logger.LogInformation("Login successful for username: {Username}", request.Username);
+                _logger.LogInformation("Login successful for username/email: {Username}", request.Username);
                 return Ok(loginResponse);
             }
             catch (UnauthorizedAccessException)
             {
-                _logger.LogWarning("Login failed for username: {Username}, IP: {IP}", 
+                _logger.LogWarning("Login failed for username/email: {Username}, IP: {IP}", 
                     request.Username, HttpContext.Connection.RemoteIpAddress);
-                return Unauthorized(new { message = "Invalid username or password" });
+                return Unauthorized(new { message = "Invalid email/username or password" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Login error for username: {Username}", request.Username);
+                _logger.LogError(ex, "Login error for username/email: {Username}", request.Username);
                 return StatusCode(500, new { message = "An error occurred during login" });
             }
         }

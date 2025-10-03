@@ -12,6 +12,7 @@ using VLivingAPI.Repositories.Data.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Load configuration based on environment
 if (builder.Environment.IsProduction())
 {
     builder.Configuration
@@ -22,6 +23,18 @@ if (builder.Environment.IsProduction())
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("https://frontend-dashboard-exe-201.vercel.app", "http://localhost:3000") // Thay đổi theo domain frontend của bạn
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
 
 builder.Services.AddAutoMapper(cfg =>
 {
@@ -61,6 +74,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 //
+builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IPostTypeService, PostTypeService>();
 builder.Services.AddScoped<IAmenityService, AmenityService>();
 builder.Services.AddScoped<IPostAmenityService, PostAmenityService>();
@@ -99,6 +113,14 @@ if (!string.IsNullOrEmpty(jwtKey))
     {
         option.DescribeAllParametersInCamelCase();
         option.ResolveConflictingActions(conf => conf.First());
+        
+        // Support for file uploads with custom schema mapping
+        option.MapType<IFormFile>(() => new OpenApiSchema
+        {
+            Type = "string",
+            Format = "binary"
+        });
+        
         option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             In = ParameterLocation.Header,
@@ -167,6 +189,8 @@ if (!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConn
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors();
 
 app.UseHttpsRedirection();
 

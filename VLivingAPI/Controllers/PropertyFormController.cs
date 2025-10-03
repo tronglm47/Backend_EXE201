@@ -18,8 +18,8 @@ namespace VLivingAPI.Controllers
     public class PropertyFormController : ControllerBase
     {
         private readonly IPropertyFormService _Service;
-        private readonly ILogger _logger;
-        public PropertyFormController(IPropertyFormService Service, ILogger logger)
+        private readonly ILogger<PropertyFormController> _logger;
+        public PropertyFormController(IPropertyFormService Service, ILogger<PropertyFormController> logger)
         {
             _Service = Service;
             _logger = logger;

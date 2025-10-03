@@ -15,8 +15,8 @@ namespace VLivingAPI.Controllers
     public class PostTypeController : ControllerBase
     {
         private readonly IPostTypeService _service;
-        private readonly ILogger _logger;
-        public PostTypeController(IPostTypeService service, ILogger logger)
+        private readonly ILogger<PostTypeController> _logger;
+        public PostTypeController(IPostTypeService service, ILogger<PostTypeController> logger)
         {
             _service = service;
             _logger = logger;

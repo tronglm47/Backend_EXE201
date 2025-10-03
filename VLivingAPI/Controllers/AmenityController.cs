@@ -1,12 +1,8 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.RequestsResponses.Amenity;
-using Services.RequestsResponses.PropertyForm;
-using VLivingAPI.Repositories.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using VLivingAPI.Authorization;
-using Repositories.Constants;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -17,8 +13,8 @@ namespace VLivingAPI.Controllers
     public class AmenityController : ControllerBase
     {
         private readonly IAmenityService _service;
-        private readonly ILogger _logger;
-        public AmenityController(IAmenityService Service, ILogger logger)
+        private readonly ILogger<AmenityController> _logger;
+        public AmenityController(IAmenityService Service, ILogger<AmenityController> logger)
         {
             _service = Service;
             _logger = logger;

@@ -5,6 +5,7 @@ namespace Repositories.Basic
 {
     public interface IUnitOfWork : IDisposable
     {
+        LocationRepository Locations { get; }
         PostAmenityRepository PostAmenity { get; }
         PostRepository Posts { get; }
         PostTypeRepository PostType { get; }
@@ -20,6 +21,7 @@ namespace Repositories.Basic
     {
         private readonly VLivingDbContext _context;
         
+        public LocationRepository Locations { get; private set; }
         public PostAmenityRepository PostAmenity { get; private set; }
         public PostRepository Posts { get; private set; }
         public PostTypeRepository PostType { get; private set; }
@@ -30,6 +32,7 @@ namespace Repositories.Basic
         public UnitOfWork(VLivingDbContext context)
         {
             _context = context;
+            Locations = new LocationRepository(context);
             PostAmenity = new PostAmenityRepository(context);
             Posts = new PostRepository(context);
             PostType = new PostTypeRepository(context);
