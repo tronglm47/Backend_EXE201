@@ -1,7 +1,6 @@
-﻿using System.Linq.Expressions;
-using Repositories.Basic;
-using VLivingAPI.Repositories.Data;
-using VLivingAPI.Repositories.Models;
+﻿using Repositories.Basic;
+using Repositories.Data;
+using Repositories.Models;
 
 namespace Repositories
 {

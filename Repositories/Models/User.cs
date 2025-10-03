@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Models;
+namespace Repositories.Models;
 
 [Index("Email", Name = "IDX_Users_Email")]
 [Index("IsEmailVerified", Name = "IDX_Users_IsEmailVerified")]

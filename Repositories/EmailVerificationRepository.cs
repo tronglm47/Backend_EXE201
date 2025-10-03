@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using VLivingAPI.Repositories.Models;
-using VLivingAPI.Repositories.Data;
+using Repositories.Models;
+using Repositories.Data;
 
 namespace Repositories
 {

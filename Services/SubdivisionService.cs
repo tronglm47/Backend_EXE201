@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Repositories.Basic;
 using Services.RequestsResponses;
 using Services.RequestsResponses.Subdivision;
-using VLivingAPI.Repositories.Models;
+using Repositories.Models;
 
 namespace Services
 {

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Models;
+namespace Repositories.Models;
 
 [Index("Status", Name = "IDX_Payments_Status")]
 [Index("UserId", Name = "IDX_Payments_UserID")]

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Models;
+namespace Repositories.Models;
 
 [Index("ApartmentCode", Name = "IDX_Apartments_ApartmentCode")]
 [Index("BuildingId", Name = "IDX_Apartments_BuildingID")]

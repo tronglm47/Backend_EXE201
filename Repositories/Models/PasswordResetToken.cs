@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace VLivingAPI.Repositories.Models;
+namespace Repositories.Models;
 
 [Index("ExpiresAt", Name = "IDX_PasswordResetTokens_ExpiresAt")]
 [Index("Token", Name = "IDX_PasswordResetTokens_Token")]

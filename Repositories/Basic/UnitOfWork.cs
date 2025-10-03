@@ -1,10 +1,15 @@
-﻿using VLivingAPI.Repositories.Data;
+﻿using Repositories.Data;
 
 namespace Repositories.Basic
 {
     public interface IUnitOfWork : IDisposable
     {
+        IApartmentRepository Apartments { get; }
+        IBuildingRepository Buildings { get; }
+        IPostUtilityRepository PostUtilities { get; }
+        IPostRepository Posts { get; }
         ISubdivisionRepository Subdivisions { get; }
+        IUtilityRepository Utilities { get; }
         Task<int> SaveChangesAsync();
         int SaveChanges();
     }
@@ -12,11 +17,25 @@ namespace Repositories.Basic
     public class UnitOfWork : IUnitOfWork
     {
         private readonly VLivingDbContext _context;
+        private IApartmentRepository? _apartmentRepository;
+        private IBuildingRepository? _buildingRepository;
+        private IPostRepository? _postRepository;
+        private IPostUtilityRepository? _postUtilityRepository;
         private ISubdivisionRepository? _subdivisionRepository;
+        private IUtilityRepository? _utilityRepository;
 
         public UnitOfWork(VLivingDbContext context)
         {
             _context = context;
+        }
+
+        public IApartmentRepository Apartments
+        {
+            get
+            {
+                _apartmentRepository ??= new ApartmentRepository(_context);
+                return _apartmentRepository;
+            }
         }
 
         public ISubdivisionRepository Subdivisions
@@ -25,6 +44,38 @@ namespace Repositories.Basic
             {
                 _subdivisionRepository ??= new SubdivisionRepository(_context);
                 return _subdivisionRepository;
+            }
+        }
+        public IBuildingRepository Buildings
+        {
+            get
+            {
+                _buildingRepository ??= new BuildingRepository(_context);
+                return _buildingRepository;
+            }
+        }
+        public IPostRepository Posts
+        {
+            get
+            {
+                _postRepository ??= new PostRepository(_context);
+                return _postRepository;
+            }
+        }
+        public IPostUtilityRepository PostUtilities
+        {
+            get
+            {
+                _postUtilityRepository ??= new PostUtilityRepository(_context);
+                return _postUtilityRepository;
+            }
+        }
+        public IUtilityRepository Utilities
+        {
+            get
+            {
+                _utilityRepository ??= new UtilityRepository(_context);
+                return _utilityRepository;
             }
         }
 

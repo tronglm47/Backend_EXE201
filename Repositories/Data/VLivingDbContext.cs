@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using VLivingAPI.Repositories.Models;
+using Repositories.Models;
 
-namespace VLivingAPI.Repositories.Data;
+namespace Repositories.Data;
 
 public partial class VLivingDbContext : DbContext
 {

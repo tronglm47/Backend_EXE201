@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Repositories.Constants;
 using System.Security.Cryptography;
 using Repositories;
+using Repositories.Models;
 
 namespace Services
 {
@@ -59,7 +60,7 @@ namespace Services
             
             try
             {
-                VLivingAPI.Repositories.Models.User? user = null;
+                Repositories.Models.User? user = null;
                 
                 // Check if input is email format
                 if (usernameOrEmail.Contains("@"))
@@ -182,7 +183,7 @@ namespace Services
                 }
 
                 // Create new user
-                var newUser = new VLivingAPI.Repositories.Models.User
+                var newUser = new Repositories.Models.User
                 {
                     Username = request.Username.Trim(),
                     Email = request.Email.Trim().ToLower(),
@@ -513,7 +514,7 @@ namespace Services
             }
         }
 
-        private string GenerateJwtToken(VLivingAPI.Repositories.Models.User user)
+        private string GenerateJwtToken(User user)
         {
             var jwtKey = _configuration["Jwt:Key"];
             var jwtIssuer = _configuration["Jwt:Issuer"];

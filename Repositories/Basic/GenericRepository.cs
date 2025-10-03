@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using VLivingAPI.Repositories.Data;
+using Repositories.Data;
 
 namespace Repositories.Basic
 {

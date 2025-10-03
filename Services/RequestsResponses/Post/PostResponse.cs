@@ -1,0 +1,61 @@
+﻿using Services.RequestsResponses.Apartment;
+
+namespace Services.RequestsResponses.Post
+{
+    public class PostResponse
+    {
+        public class PostGetAll
+        {
+            public int PostId { get; set; }
+            public int? ApartmentId { get; set; }
+            public int? UserId { get; set; }
+            public string Title { get; set; } = null!;
+            public string Description { get; set; } = null!;
+            public double? Price { get; set; }
+            public string PostType { get; set; } = null!;
+            public string Status { get; set; } = null!;
+            public DateTime CreatedAt { get; set; }
+        }
+        public class PostGetAllForUser
+        {
+            public int PostId { get; set; }
+            public int UserId { get; set; }
+            public string Title { get; set; } = null!;
+            public string Description { get; set; } = null!;
+        }
+        public class PostGetAllForLandLord
+        {
+            public int PostId { get; set; }
+            public int? ApartmentId { get; set; }
+            public string ApartmentCode { get; set; } = null!;
+            public int Floor { get; set; }
+            public double Area { get; set; }
+            public int NumberBathroom { get; set; }
+            public int BuildingId { get; set; }
+            public string BuildingName { get; set; } = null!;
+            public string BlockCode { get; set; } = null!;
+            public string SubdivisionId { get; set; } = null!;
+            public string SubdivisionName { get; set; } = null!;
+            public int? UserId { get; set; }
+            public string Title { get; set; } = null!;
+            public string Description { get; set; } = null!;
+            public double? Price { get; set; }
+            public string PostType { get; set; } = null!;
+            public string Status { get; set; } = null!;
+            public DateTime CreatedAt { get; set; }
+        }
+        public class PostDetailForLandLord
+        {
+            public int PostId { get; set; }
+            public int? ApartmentId { get; set; }
+            public ApartmentResponse.ApartmentDetail Apartment { get; set; }
+            public int? UserId { get; set; }
+            public string Title { get; set; } = null!;
+            public string Description { get; set; } = null!;
+            public double? Price { get; set; }
+            public string PostType { get; set; } = null!;
+            public string Status { get; set; } = null!;
+            public DateTime CreatedAt { get; set; }
+        }
+    }
+}

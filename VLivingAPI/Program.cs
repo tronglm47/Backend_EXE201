@@ -8,7 +8,7 @@ using Services;
 using Services.Models;
 using Services.Utils;
 using System.Text;
-using VLivingAPI.Repositories.Data;
+using Repositories.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +73,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 //
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IUtilityService, UtilityService>();
+builder.Services.AddScoped<IPostUtilityService, PostUtilityService>();
 builder.Services.AddScoped<ISubdivisionService, SubdivisionService>();
 //
 
