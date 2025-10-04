@@ -20,8 +20,18 @@ namespace Services.RequestsResponses.Post
         {
             public int PostId { get; set; }
             public int UserId { get; set; }
+            public string UserName { get; set; } = null!;
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
+        }
+        public class PostDetailForUser
+        {
+            public int PostId { get; set; }
+            public int UserId { get; set; }
+            public string UserName { get; set; } = null!;
+            public string Title { get; set; } = null!;
+            public string Description { get; set; } = null!;
+            public DateTime CreatedAt { get; set; }
         }
         public class PostGetAllForLandLord
         {
@@ -37,6 +47,7 @@ namespace Services.RequestsResponses.Post
             public string SubdivisionId { get; set; } = null!;
             public string SubdivisionName { get; set; } = null!;
             public int? UserId { get; set; }
+            public string UserName { get; set; } = null!;
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
             public double? Price { get; set; }
@@ -50,6 +61,7 @@ namespace Services.RequestsResponses.Post
             public int? ApartmentId { get; set; }
             public ApartmentResponse.ApartmentDetail Apartment { get; set; }
             public int? UserId { get; set; }
+            public string UserName { get; set; } = null!;
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
             public double? Price { get; set; }

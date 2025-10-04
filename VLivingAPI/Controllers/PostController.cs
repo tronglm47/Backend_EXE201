@@ -90,7 +90,7 @@ namespace VLivingAPI.Controllers
         /// <returns>Paginated list of posts with complete details</returns>
         /// <response code="200">Returns the paginated list of posts with full details</response>
         /// <response code="500">Internal server error</response>
-        [HttpGet("landlord/details")]
+        [HttpGet("landlord")]
         [ProducesResponseType(typeof(PagedResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllPostsForLandLord([FromQuery] PostQuery queryParams)
@@ -135,6 +135,62 @@ namespace VLivingAPI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting post detail for landlord with ID {PostId}", id);
+                return StatusCode(500, new { message = "An error occurred while retrieving post details", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get all posts for user with user details (title and description)
+        /// </summary>
+        /// <param name="queryParams">Query parameters (Page, PageSize, SearchField, Search, SortBy, IsDescending)</param>
+        /// <returns>Paginated list of user posts with user information</returns>
+        /// <response code="200">Returns the paginated list of user posts</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("user")]
+        [ProducesResponseType(typeof(PagedResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllPostsForUser([FromQuery] PostQuery queryParams)
+        {
+            try
+            {
+                var result = await _postService.GetAllPostsForUserAsync(queryParams);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all user posts");
+                return StatusCode(500, new { message = "An error occurred while retrieving user posts", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get detailed information for a single post for user (FindRoom)
+        /// </summary>
+        /// <param name="id">Post ID</param>
+        /// <returns>Post detail with user information</returns>
+        /// <response code="200">Post details retrieved successfully</response>
+        /// <response code="404">Post not found or not a user post</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("user/detail/{id}")]
+        [ProducesResponseType(typeof(PostResponse.PostDetailForUser), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetDetailForUser(int id)
+        {
+            try
+            {
+                var result = await _postService.GetDetailForUserAsync(id);
+                
+                if (result == null)
+                {
+                    return NotFound(new { message = $"Post with ID {id} not found or not a user post" });
+                }
+                
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting post detail for user with ID {PostId}", id);
                 return StatusCode(500, new { message = "An error occurred while retrieving post details", error = ex.Message });
             }
         }

@@ -15,8 +15,10 @@ namespace Services
     {
         Task<PagedResponse<object>> GetAllAsync(PostQuery queryParams);
         Task<PagedResponse<object>> GetAllPostsForLandLordAsync(PostQuery queryParams);
+        Task<PagedResponse<object>> GetAllPostsForUserAsync(PostQuery queryParams);
         Task<object?> GetByIdAsync(int id, List<string> selectedFields);
         Task<PostResponse.PostDetailForLandLord?> GetDetailForLandLordAsync(int id);
+        Task<PostResponse.PostDetailForUser?> GetDetailForUserAsync(int id);
         Task<int> CreatePostForUserAsync(PostRequest.PostCreateForUser request, int userId);
         Task<int> CreatePostForLandLordAsync(PostRequest.PostCreateForLandLord request, int userId);
         Task<bool> UpdatePostForUserAsync(PostRequest.PostUpdateForUser request, int postId, int userId);
@@ -93,6 +95,13 @@ namespace Services
         }
 
         /// <summary>
+        /// Get all posts for User with full details (Apartment, Building, Subdivision)
+        /// Includes navigation properties for detailed information display
+        /// Only returns posts with PostType = ForRent or ForSale
+        /// </summary>
+
+
+        /// <summary>
         /// Get all posts for landlord with full details (Apartment, Building, Subdivision)
         /// Includes navigation properties for detailed information display
         /// Only returns posts with PostType = ForRent or ForSale
@@ -130,6 +139,7 @@ namespace Services
                         {
                             PostId = p.PostId,
                             UserId = p.UserId,
+                            UserName = p.User?.Username ?? "Unknown",
                             Title = p.Title,
                             Description = p.Description,
                             Price = (double?)p.Price,
@@ -192,6 +202,7 @@ namespace Services
                 PostId = post.PostId,
                 ApartmentId = post.ApartmentId,
                 UserId = post.UserId,
+                UserName = post.User?.Username ?? "Unknown",
                 Title = post.Title,
                 Description = post.Description,
                 Price = (double?)post.Price,
@@ -230,6 +241,79 @@ namespace Services
             };
 
             _logger.LogInformation("Successfully retrieved detail for landlord post {PostId}", id);
+            return response;
+        }
+
+        /// <summary>
+        /// Get all posts for user with user details
+        /// Only returns posts with PostType = FindRoom
+        /// Shows title, description, and user information
+        /// </summary>
+        public async Task<PagedResponse<object>> GetAllPostsForUserAsync(PostQuery queryParams)
+        {
+            // Count total items with search (only FindRoom)
+            var totalItems = await _unitOfWork.Posts.CountPostsForUserAsync(
+                searchField: queryParams.SearchField,
+                search: queryParams.Search
+            );
+
+            // Get posts with user details
+            var posts = await _unitOfWork.Posts.GetPostsForUserAsync(
+                page: queryParams.Page,
+                pageSize: queryParams.PageSize,
+                searchField: queryParams.SearchField,
+                search: queryParams.Search,
+                sortBy: queryParams.SortBy ?? "PostId",
+                isDescending: queryParams.IsDescending
+            );
+
+            var response = new PagedResponse<object>
+            {
+                CurrentPage = queryParams.Page,
+                TotalItems = totalItems,
+                TotalPages = (int)Math.Ceiling(totalItems / (double)queryParams.PageSize),
+                Items = posts.Select(post => new PostResponse.PostGetAllForUser
+                {
+                    PostId = post.PostId,
+                    UserId = post.UserId,
+                    UserName = post.User?.Username ?? "Unknown",
+                    Title = post.Title,
+                    Description = post.Description
+                }).ToList<object>()
+            };
+
+            _logger.LogInformation("Successfully retrieved {Count} user posts (page {Page})", posts.Count(), queryParams.Page);
+            return response;
+        }
+
+        /// <summary>
+        /// Get detailed information for a single post for user (FindRoom)
+        /// Returns post details with user information
+        /// Returns null if post not found or not a user post type
+        /// </summary>
+        public async Task<PostResponse.PostDetailForUser?> GetDetailForUserAsync(int id)
+        {
+            _logger.LogInformation("Getting detail for user post {PostId}", id);
+
+            var post = await _unitOfWork.Posts.GetByIdForUserAsync(id);
+
+            if (post == null)
+            {
+                _logger.LogWarning("User post {PostId} not found or not FindRoom type", id);
+                return null;
+            }
+
+            var response = new PostResponse.PostDetailForUser
+            {
+                PostId = post.PostId,
+                UserId = post.UserId,
+                UserName = post.User?.Username ?? "Unknown",
+                Title = post.Title,
+                Description = post.Description,
+                CreatedAt = post.CreatedAt ?? DateTime.UtcNow
+            };
+
+            _logger.LogInformation("Successfully retrieved detail for user post {PostId}", id);
             return response;
         }
 
