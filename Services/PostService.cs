@@ -226,7 +226,6 @@ namespace Services
                         SubdivisionId = post.Apartment.Building.SubdivisionId,
                         Name = post.Apartment.Building.Name,
                         BlockCode = post.Apartment.Building.BlockCode,
-                        Description = "", // Building model doesn't have Description field
                         CreatedAt = post.Apartment.Building.CreatedAt,
                         Subdivision = post.Apartment.Building.Subdivision != null ? new SubdivisionResponse.SubdivisionDetail
                         {

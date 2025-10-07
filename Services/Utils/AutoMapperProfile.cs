@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Services.RequestsResponses.Subdivision;
+using Services.RequestsResponses.Building;
 using Repositories.Models;
 using Services.RequestsResponses.Utility;
 using Services.RequestsResponses.PostUtility;
@@ -26,12 +27,23 @@ namespace Services.Utils
             CreateMap<PostUtilityResponse.PostUtilityDetail, PostUtility>().ReverseMap();
             CreateMap<PostUtilityRequest.PostUtilityCreate, PostUtility>();
             CreateMap<PostUtilityRequest.PostUtilityUpdate, PostUtility>();
+            
             // Subdivision
             CreateMap<SubdivisionResponse.SubdivisionGetAll, Subdivision>().ReverseMap();
             CreateMap<SubdivisionResponse.SubdivisionDetail, Subdivision>().ReverseMap();
             CreateMap<SubdivisionRequest.SubdivisionCreate, Subdivision>();
             CreateMap<SubdivisionRequest.SubdivisionUpdate, Subdivision>();
-           // Utility
+            
+            // Building
+            CreateMap<BuildingResponse.BuildingGetAll, Building>()
+                .ForMember(dest => dest.Subdivision, opt => opt.Ignore())
+                .ReverseMap()
+                .ForMember(dest => dest.SubdivisionName, opt => opt.MapFrom(src => src.Subdivision != null ? src.Subdivision.Name : null));
+            CreateMap<BuildingResponse.BuildingDetail, Building>().ReverseMap();
+            CreateMap<BuildingRequest.BuildingCreate, Building>();
+            CreateMap<BuildingRequest.BuildingUpdate, Building>();
+            
+            // Utility
             CreateMap<UtilityResponse.UtilityGetAll, Utility>().ReverseMap();
             CreateMap<UtilityResponse.UtilityDetail, Utility>().ReverseMap();
             CreateMap<UtilityRequest.UtilityCreate, Utility>();

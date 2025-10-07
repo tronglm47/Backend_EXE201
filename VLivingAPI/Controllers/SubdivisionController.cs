@@ -2,6 +2,7 @@
 using Services;
 using Services.RequestsResponses;
 using Services.RequestsResponses.Subdivision;
+using VLivingAPI.Authorization;
 
 namespace VLivingAPI.Controllers
 {
@@ -88,10 +89,15 @@ namespace VLivingAPI.Controllers
         /// <returns>Created subdivision ID</returns>
         /// <response code="201">Subdivision created successfully</response>
         /// <response code="400">Invalid request data</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="403">Forbidden - User doesn't have required permissions</response>
         /// <response code="500">Internal server error</response>
         [HttpPost]
+        [BusinessAuthorize(BusinessRole.MasterDataManagement)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] SubdivisionRequest.SubdivisionCreate request)
         {
@@ -135,11 +141,16 @@ namespace VLivingAPI.Controllers
         /// <returns>Update result</returns>
         /// <response code="200">Subdivision updated successfully</response>
         /// <response code="400">Invalid request data</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="403">Forbidden - User doesn't have required permissions</response>
         /// <response code="404">Subdivision not found</response>
         /// <response code="500">Internal server error</response>
         [HttpPut("{id}")]
+        [BusinessAuthorize(BusinessRole.MasterDataManagement)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(int id, [FromBody] SubdivisionRequest.SubdivisionUpdate request)
@@ -178,10 +189,15 @@ namespace VLivingAPI.Controllers
         /// <param name="id">Subdivision ID</param>
         /// <returns>Delete result</returns>
         /// <response code="200">Subdivision deleted successfully</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="403">Forbidden - User doesn't have required permissions</response>
         /// <response code="404">Subdivision not found</response>
         /// <response code="500">Internal server error</response>
         [HttpDelete("{id}")]
+        [BusinessAuthorize(BusinessRole.MasterDataManagement)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(int id)

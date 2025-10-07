@@ -24,26 +24,10 @@ namespace Services.RequestsResponses.User
         [StringLength(20, ErrorMessage = "Phone number must not exceed 20 characters")]
         public string? PhoneNumber { get; set; }
 
-        [OptionalUrl(ErrorMessage = "Invalid URL format")]
-        [StringLength(255, ErrorMessage = "Profile picture URL must not exceed 255 characters")]
-        public string? ProfilePictureUrl { get; set; }
-
         [StringLength(500, ErrorMessage = "Bio must not exceed 500 characters")]
         public string? Bio { get; set; }
 
         [StringLength(20, ErrorMessage = "Role must not exceed 20 characters")]
-        public string? Role { get; set; } // Will default to "User" if empty
-    }
-
-    // Custom validation attribute for optional URL
-    public class OptionalUrlAttribute : ValidationAttribute
-    {
-        public override bool IsValid(object? value)
-        {
-            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
-                return true; // Allow null or empty
-
-            return Uri.TryCreate(value.ToString(), UriKind.Absolute, out _);
-        }
+        public string? Role { get; set; } // Will be validated and default to "user" if empty or invalid
     }
 }

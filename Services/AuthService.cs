@@ -191,7 +191,6 @@ namespace Services
                     Role = string.IsNullOrWhiteSpace(request.Role) ? UserRoleConstants.UserRole : request.Role.Trim(),
                     FullName = string.IsNullOrWhiteSpace(request.FullName) ? null : request.FullName.Trim(),
                     PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim(),
-                    ProfilePictureUrl = string.IsNullOrWhiteSpace(request.ProfilePictureUrl) ? null : request.ProfilePictureUrl.Trim(),
                     Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim(),
                     CreatedAt = DateTime.UtcNow,
                     IsEmailVerified = false

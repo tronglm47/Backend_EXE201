@@ -77,6 +77,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IUtilityService, UtilityService>();
 builder.Services.AddScoped<IPostUtilityService, PostUtilityService>();
 builder.Services.AddScoped<ISubdivisionService, SubdivisionService>();
+builder.Services.AddScoped<IBuildingService, BuildingService>();
 //
 
 // Background Services

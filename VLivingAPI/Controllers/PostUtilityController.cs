@@ -3,6 +3,7 @@ using Services;
 using Services.RequestsResponses;
 using Services.RequestsResponses.PostUtility;
 using System.Collections.Generic;
+using VLivingAPI.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -89,10 +90,15 @@ namespace VLivingAPI.Controllers
         /// <returns>Created post utility ID</returns>
         /// <response code="201">Post Utility created successfully</response>
         /// <response code="400">Invalid request data</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="403">Forbidden - User doesn't have required permissions</response>
         /// <response code="500">Internal server error</response>
         [HttpPost]
+        [BusinessAuthorize(BusinessRole.PostManagement)]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] PostUtilityRequest.PostUtilityCreate request)
         {
@@ -136,11 +142,16 @@ namespace VLivingAPI.Controllers
         /// <returns>Update result</returns>
         /// <response code="200">Post Utility updated successfully</response>
         /// <response code="400">Invalid request data</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="403">Forbidden - User doesn't have required permissions</response>
         /// <response code="404">Post Utility not found</response>
         /// <response code="500">Internal server error</response>
         [HttpPut("{id}")]
+        [BusinessAuthorize(BusinessRole.PostManagement)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(int id, [FromBody] PostUtilityRequest.PostUtilityUpdate request)
@@ -174,10 +185,15 @@ namespace VLivingAPI.Controllers
         /// <param name="id">Post Utility ID (PostId)</param>
         /// <returns>Delete result</returns>
         /// <response code="200">Post Utility deleted successfully</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="403">Forbidden - User doesn't have required permissions</response>
         /// <response code="404">Post Utility not found</response>
         /// <response code="500">Internal server error</response>
         [HttpDelete("{id}")]
+        [BusinessAuthorize(BusinessRole.PostManagement)]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(int id)

@@ -8,20 +8,18 @@ namespace Services.RequestsResponses.Building
         {
             public int BuildingId { get; set; }
             public int? SubdivisionId { get; set; }
-            public string SubdivisionName { get; set; }
-            public string Name { get; set; }
-            public string BlockCode { get; set; }
-            public string Description { get; set; }
+            public string? SubdivisionName { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string BlockCode { get; set; } = string.Empty;
             public DateTime? CreatedAt { get; set; }
         }
         public class BuildingDetail
         {
             public int BuildingId { get; set; }
             public int? SubdivisionId { get; set; }
-            public SubdivisionResponse.SubdivisionDetail Subdivision { get; set; }
-            public string Name { get; set; }
-            public string BlockCode { get; set; }
-            public string Description { get; set; }
+            public SubdivisionResponse.SubdivisionDetail? Subdivision { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string BlockCode { get; set; } = string.Empty;
             public DateTime? CreatedAt { get; set; }
         }
     }

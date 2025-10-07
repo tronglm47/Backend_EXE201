@@ -89,26 +89,16 @@ namespace VLivingAPI.Controllers
                 return BadRequest(new { message = "Password must contain at least one letter, one number, and one special character" });
             }
 
-            // Set default role if not provided
-            if (string.IsNullOrWhiteSpace(request.Role))
-            {
-                request.Role = UserRoleConstants.UserRole;
-                _logger.LogDebug("Setting default role '{Role}' for registration: {Username}", request.Role, request.Username);
-            }
-
-            // Validate role
-            if (!UserRoleConstants.IsValidRole(request.Role))
-            {
-                _logger.LogWarning("Invalid role '{Role}' provided for registration: {Username}", request.Role, request.Username);
-                return BadRequest(new { message = $"Invalid role. Valid roles are: {string.Join(", ", UserRoleConstants.GetAllRoles())}" });
-            }
+            // Normalize and validate role - only allow landlord/lander, agent, or default to user
+            request.Role = UserRoleConstants.NormalizeRole(request.Role);
+            _logger.LogDebug("Normalized role to '{Role}' for registration: {Username}", request.Role, request.Username);
 
             try
             {
                 var response = await _authService.RegisterAsync(request);
                 
-                _logger.LogInformation("Registration successful for username: {Username}, UserId: {UserId}", 
-                    request.Username, response.UserId);
+                _logger.LogInformation("Registration successful for username: {Username}, UserId: {UserId}, Role: {Role}", 
+                    request.Username, response.UserId, request.Role);
                 return CreatedAtAction(nameof(GetUserInfo), new { }, response);
             }
             catch (InvalidOperationException ex)
