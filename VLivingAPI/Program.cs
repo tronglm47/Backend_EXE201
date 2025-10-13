@@ -66,6 +66,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailVerificationRepository, EmailVerificationRepository>();
 builder.Services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
 // Generic Repository và UnitOfWork pattern
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -83,7 +84,15 @@ builder.Services.AddScoped<IPostUtilityService, PostUtilityService>();
 builder.Services.AddScoped<ISubdivisionService, SubdivisionService>();
 builder.Services.AddScoped<IBuildingService, BuildingService>();
 builder.Services.AddScoped<IApartmentService, ApartmentService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
 //
+
+// SignalR
+builder.Services.AddSignalR();
+
+// HttpClient for LocationService
+builder.Services.AddHttpClient<ILocationService, LocationService>();
 
 // Background Services
 builder.Services.AddHostedService<TokenCleanupService>();
@@ -212,5 +221,8 @@ app.MapGet("/health", () => new {
 });
 
 app.MapControllers();
+
+// Map SignalR hub
+app.MapHub<VLivingAPI.Hubs.LocationTrackingHub>("/locationHub");
 
 app.Run();

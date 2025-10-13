@@ -5,6 +5,7 @@ namespace Repositories.Basic
     public interface IUnitOfWork : IDisposable
     {
         IApartmentRepository Apartments { get; }
+        IBookingRepository Bookings { get; }
         IBuildingRepository Buildings { get; }
         IPostUtilityRepository PostUtilities { get; }
         IPostRepository Posts { get; }
@@ -19,6 +20,7 @@ namespace Repositories.Basic
     {
         private readonly VLivingDbContext _context;
         private IApartmentRepository? _apartmentRepository;
+        private IBookingRepository? _bookingRepository;
         private IBuildingRepository? _buildingRepository;
         private IPostRepository? _postRepository;
         private IPostImageRepository? _postImageRepository;
@@ -37,6 +39,15 @@ namespace Repositories.Basic
             {
                 _apartmentRepository ??= new ApartmentRepository(_context);
                 return _apartmentRepository;
+            }
+        }
+
+        public IBookingRepository Bookings
+        {
+            get
+            {
+                _bookingRepository ??= new BookingRepository(_context);
+                return _bookingRepository;
             }
         }
 

@@ -35,6 +35,23 @@ public partial class Booking
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "decimal(10, 8)")]
+    public decimal? MeetingLatitude { get; set; }
+
+    [Column(TypeName = "decimal(11, 8)")]
+    public decimal? MeetingLongitude { get; set; }
+
+    [StringLength(500)]
+    public string MeetingAddress { get; set; }
+
+    [Column(TypeName = "decimal(8, 2)")]
+    public decimal? DistanceToMeeting { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? EstimatedArrivalTime { get; set; }
+
+    public bool? IsLocationTrackingEnabled { get; set; } = false;
+
     [ForeignKey("PostId")]
     [InverseProperty("Bookings")]
     public virtual Post Post { get; set; }
@@ -42,4 +59,7 @@ public partial class Booking
     [ForeignKey("RenterId")]
     [InverseProperty("Bookings")]
     public virtual User Renter { get; set; }
+
+    [InverseProperty("Booking")]
+    public virtual ICollection<LocationTrackingHistory> LocationTrackingHistories { get; set; } = new List<LocationTrackingHistory>();
 }

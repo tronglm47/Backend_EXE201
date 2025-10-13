@@ -48,6 +48,8 @@ public partial class VLivingDbContext : DbContext
     public virtual DbSet<UserSubscription> UserSubscriptions { get; set; }
 
     public virtual DbSet<Utility> Utilities { get; set; }
+
+    public virtual DbSet<LocationTrackingHistory> LocationTrackingHistories { get; set; }
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()
