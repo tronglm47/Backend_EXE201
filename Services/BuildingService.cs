@@ -113,6 +113,7 @@ namespace Services
             building.SubdivisionId = item.SubdivisionId;
             building.Name = item.Name;
             building.BlockCode = item.BlockCode;
+            building.MaxFloor = item.MaxFloor;
 
             if (await _unitOfWork.Buildings.UpdateAsync(building) > 0)
             {

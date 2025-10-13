@@ -49,6 +49,9 @@ public partial class Post
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
     [InverseProperty("Post")]
+    public virtual ICollection<PostImage> PostImages { get; set; } = new List<PostImage>();
+
+    [InverseProperty("Post")]
     public virtual ICollection<PostUtility> PostUtilities { get; set; } = new List<PostUtility>();
 
     [ForeignKey("UserId")]

@@ -5,9 +5,11 @@ namespace Repositories.Basic
     public interface IUnitOfWork : IDisposable
     {
         IApartmentRepository Apartments { get; }
+        IBookingRepository Bookings { get; }
         IBuildingRepository Buildings { get; }
         IPostUtilityRepository PostUtilities { get; }
         IPostRepository Posts { get; }
+        IPostImageRepository PostImages { get; }
         ISubdivisionRepository Subdivisions { get; }
         IUtilityRepository Utilities { get; }
         Task<int> SaveChangesAsync();
@@ -18,8 +20,10 @@ namespace Repositories.Basic
     {
         private readonly VLivingDbContext _context;
         private IApartmentRepository? _apartmentRepository;
+        private IBookingRepository? _bookingRepository;
         private IBuildingRepository? _buildingRepository;
         private IPostRepository? _postRepository;
+        private IPostImageRepository? _postImageRepository;
         private IPostUtilityRepository? _postUtilityRepository;
         private ISubdivisionRepository? _subdivisionRepository;
         private IUtilityRepository? _utilityRepository;
@@ -35,6 +39,15 @@ namespace Repositories.Basic
             {
                 _apartmentRepository ??= new ApartmentRepository(_context);
                 return _apartmentRepository;
+            }
+        }
+
+        public IBookingRepository Bookings
+        {
+            get
+            {
+                _bookingRepository ??= new BookingRepository(_context);
+                return _bookingRepository;
             }
         }
 
@@ -60,6 +73,14 @@ namespace Repositories.Basic
             {
                 _postRepository ??= new PostRepository(_context);
                 return _postRepository;
+            }
+        }
+        public IPostImageRepository PostImages
+        {
+            get
+            {
+                _postImageRepository ??= new PostImageRepository(_context);
+                return _postImageRepository;
             }
         }
         public IPostUtilityRepository PostUtilities

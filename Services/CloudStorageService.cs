@@ -126,8 +126,8 @@ namespace Services
 
             if (_storageClient == null)
             {
-                _logger.LogWarning("Google Cloud Storage is not available. Returning placeholder URL.");
-                return $"https://placeholder.com/{entityType}/{file.FileName}";
+                _logger.LogWarning("Google Cloud Storage is not available. Image upload skipped for file: {FileName}", file.FileName);
+                return string.Empty; // Return empty string instead of placeholder
             }
 
             // Validate file type
@@ -183,8 +183,9 @@ namespace Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to upload file {FileName} to Google Cloud Storage", file.FileName);
-                throw new InvalidOperationException($"Failed to upload file: {ex.Message}", ex);
+                _logger.LogError(ex, "Failed to upload file {FileName} to Google Cloud Storage. Error: {ErrorMessage}", file.FileName, ex.Message);
+                // Return empty string instead of throwing exception to allow post creation to continue
+                return string.Empty;
             }
         }
 
@@ -198,7 +199,8 @@ namespace Services
             var uploadTasks = files.Select(file => UploadImageAsync(file, entityType, entityId));
             var results = await Task.WhenAll(uploadTasks);
             
-            return results.ToList();
+            // Filter out empty strings (failed uploads)
+            return results.Where(url => !string.IsNullOrEmpty(url)).ToList();
         }
 
         public async Task<bool> DeleteImageAsync(string imageUrl)

@@ -14,7 +14,7 @@ namespace Services.RequestsResponses.Apartment
             public double Area { get; set; }
             public string ApartmentType { get; set; }
             public string Status { get; set; }
-            public int NumberOfBedrooms { get; set; }
+            public int NumberBathroom { get; set; }
         }
         public class ApartmentUpdate
         {
@@ -23,6 +23,7 @@ namespace Services.RequestsResponses.Apartment
             public double Area { get; set; }
             public string ApartmentType { get; set; }
             public string Status { get; set; }
+            public int NumberBathroom { get; set; }
         }
     }
 }

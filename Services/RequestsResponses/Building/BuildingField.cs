@@ -6,7 +6,7 @@ namespace Services.RequestsResponses.Building
     {
         protected override List<string> ValidFields => new List<string>
         {
-            "buildingid", "subdivisionid", "name", "blockcode", "createdat"
+            "buildingid", "subdivisionid", "name", "blockcode", "maxfloor", "createdat"
         };
         protected override void MapField<T>(string field, T item, Dictionary<string, object?> result)
         {
@@ -27,6 +27,10 @@ namespace Services.RequestsResponses.Building
                 case "blockcode":
                     result["blockcode"] = (item as BuildingResponse.BuildingGetAll)?.BlockCode 
                                         ?? (item as BuildingResponse.BuildingDetail)?.BlockCode;
+                    break;
+                case "maxfloor":
+                    result["maxfloor"] = (item as BuildingResponse.BuildingGetAll)?.MaxFloor 
+                                        ?? (item as BuildingResponse.BuildingDetail)?.MaxFloor;
                     break;
                 case "createdat":
                     result["createdat"] = (item as BuildingResponse.BuildingGetAll)?.CreatedAt

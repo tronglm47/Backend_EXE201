@@ -33,6 +33,8 @@ public partial class VLivingDbContext : DbContext
 
     public virtual DbSet<Post> Posts { get; set; }
 
+    public virtual DbSet<PostImage> PostImages { get; set; }
+
     public virtual DbSet<PostUtility> PostUtilities { get; set; }
 
     public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
@@ -46,6 +48,8 @@ public partial class VLivingDbContext : DbContext
     public virtual DbSet<UserSubscription> UserSubscriptions { get; set; }
 
     public virtual DbSet<Utility> Utilities { get; set; }
+
+    public virtual DbSet<LocationTrackingHistory> LocationTrackingHistories { get; set; }
     public static string GetConnectionString(string connectionStringName)
     {
         var config = new ConfigurationBuilder()
@@ -147,6 +151,19 @@ public partial class VLivingDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Posts)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Posts__UserID__7246E95D");
+        });
+
+        modelBuilder.Entity<PostImage>(entity =>
+        {
+            entity.HasKey(e => e.ImageId).HasName("PK__PostImag__7516F4EC");
+
+            entity.Property(e => e.DisplayOrder).HasDefaultValue(0);
+            entity.Property(e => e.IsPrimary).HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.Post).WithMany(p => p.PostImages)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__PostImage__PostI__");
         });
 
         modelBuilder.Entity<PostUtility>(entity =>

@@ -15,6 +15,7 @@ namespace Services.RequestsResponses.Apartment
             public string Status { get; set; }
             public int NumberOfBedrooms { get; set; }
             public DateTime CreatedAt { get; set; }
+            public List<int> PostIds { get; set; } = new List<int>();
         }
         public class ApartmentDetail
         {

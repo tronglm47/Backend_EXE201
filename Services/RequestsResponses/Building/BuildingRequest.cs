@@ -7,12 +7,14 @@
             public int? SubdivisionId { get; set; }
             public required string Name { get; set; }
             public required string BlockCode { get; set; }
+            public int? MaxFloor { get; set; }
         }
         public class BuildingUpdate
         {
             public int? SubdivisionId { get; set; }
             public required string Name { get; set; }
             public required string BlockCode { get; set; }
+            public int? MaxFloor { get; set; }
         }
     }
 }

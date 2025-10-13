@@ -6,6 +6,7 @@ using Services.RequestsResponses.Utility;
 using Services.RequestsResponses.PostUtility;
 using Services.RequestsResponses.Post;
 using Services.RequestsResponses.Apartment;
+using Services.RequestsResponses.User;
 
 namespace Services.Utils
 {
@@ -19,8 +20,23 @@ namespace Services.Utils
             CreateMap<PostRequest.PostCreateForLandLord, Post>();
             
             // Apartment
-            CreateMap<ApartmentRequest.ApartmentCreate, Apartment>();
-            CreateMap<ApartmentRequest.ApartmentUpdate, Apartment>();
+            CreateMap<ApartmentResponse.ApartmentGetAll, Apartment>()
+                .ForMember(dest => dest.Building, opt => opt.Ignore())
+                .ReverseMap()
+                .ForMember(dest => dest.BuildingId, opt => opt.MapFrom(src => src.BuildingId ?? 0))
+                .ForMember(dest => dest.Floor, opt => opt.MapFrom(src => src.Floor ?? 0))
+                .ForMember(dest => dest.Area, opt => opt.MapFrom(src => (double)(src.Area ?? 0)))
+                .ForMember(dest => dest.NumberOfBedrooms, opt => opt.MapFrom(src => src.NumberBathroom ?? 0))
+                .ForMember(dest => dest.PostIds, opt => opt.MapFrom(src => src.Posts.Select(p => p.PostId).ToList()));
+            CreateMap<ApartmentResponse.ApartmentDetail, Apartment>().ReverseMap()
+                .ForMember(dest => dest.NumberOfBedrooms, opt => opt.MapFrom(src => src.NumberBathroom ?? 0))
+                .ForMember(dest => dest.Floor, opt => opt.MapFrom(src => src.Floor ?? 0))
+                .ForMember(dest => dest.Area, opt => opt.MapFrom(src => (double)(src.Area ?? 0)));
+            CreateMap<ApartmentRequest.ApartmentCreate, Apartment>()
+                .ForMember(dest => dest.Area, opt => opt.MapFrom(src => (decimal)src.Area))
+                .ForMember(dest => dest.NumberBathroom, opt => opt.MapFrom(src => src.NumberBathroom));
+            CreateMap<ApartmentRequest.ApartmentUpdate, Apartment>()
+                .ForMember(dest => dest.Area, opt => opt.MapFrom(src => (decimal)src.Area));
             
             // PostUtility
             CreateMap<PostUtilityResponse.PostUtilityGetAll, PostUtility>().ReverseMap();
@@ -48,6 +64,11 @@ namespace Services.Utils
             CreateMap<UtilityResponse.UtilityDetail, Utility>().ReverseMap();
             CreateMap<UtilityRequest.UtilityCreate, Utility>();
             CreateMap<UtilityRequest.UtilityUpdate, Utility>();
+
+            // User
+            CreateMap<UserResponse.UserGetAll, User>().ReverseMap();
+            CreateMap<UserResponse.UserDetail, User>().ReverseMap();
+            CreateMap<UserRequest.AdminUpdateUserRequest, User>();
         }
     }
 }

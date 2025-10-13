@@ -1,0 +1,327 @@
+# VLiving Location API Integration Guide for Android
+
+## Overview
+VLiving API provides location tracking features for booking management. This guide helps Android developers integrate Google Maps and location tracking with the VLiving backend API.
+
+## API Endpoints
+
+### 1. Update User Location
+**POST** `/api/Location/update`
+- **Purpose**: Update user's current location
+- **Authentication**: Required (Bearer token)
+- **Body**:
+```json
+{
+  "latitude": 10.762622,
+  "longitude": 106.660172
+}
+```
+- **Response**: `{ "message": "Location updated successfully" }`
+
+### 2. Calculate Distance & Duration
+**POST** `/api/Location/calculate-distance`
+- **Purpose**: Get distance and travel time between two locations using Google Maps
+- **Authentication**: Required
+- **Body**:
+```json
+{
+  "startLatitude": 10.762622,
+  "startLongitude": 106.660172,
+  "endLatitude": 10.776889,
+  "endLongitude": 106.700806
+}
+```
+- **Response**:
+```json
+{
+  "distanceKm": 5.2,
+  "durationMinutes": 12,
+  "distanceText": "5.2 km",
+  "durationText": "12 phút"
+}
+```
+
+### 3. Track Location for Booking
+**POST** `/api/Location/track/{bookingId}`
+- **Purpose**: Track user location during booking meeting
+- **Authentication**: Required
+- **Body**: Same as update location
+- **Response**:
+```json
+{
+  "message": "Location tracked successfully",
+  "trackingId": "guid",
+  "distanceToMeeting": 2.3
+}
+```
+
+### 4. Get Location History
+**GET** `/api/Location/history/{bookingId}`
+- **Purpose**: Get location tracking history for a booking
+- **Authentication**: Required
+- **Response**: Array of location history records
+
+## Booking API Integration
+
+### Get User's Bookings with Location
+**GET** `/api/Booking/my-bookings`
+- **Purpose**: Get user's bookings including location data
+- **Response** includes:
+```json
+{
+  "items": [
+    {
+      "bookingId": 1,
+      "meetingLatitude": null,
+      "meetingLongitude": null,
+      "meetingAddress": null,
+      "distanceToMeeting": null,
+      "estimatedArrivalTime": null,
+      "isLocationTrackingEnabled": false
+    }
+  ]
+}
+```
+
+## Android Implementation Flow
+
+### 1. Display Bookings List
+```kotlin
+// Call API to get user bookings
+val bookings = apiService.getMyBookings()
+
+// For each booking, show:
+// - Booking details
+// - "Đi đến" button if meeting location not set
+// - Navigation button if meeting location available
+```
+
+### 2. "Đi đến" Button Flow
+```kotlin
+// When user clicks "Đi đến":
+// 1. Get current location
+val currentLocation = getCurrentLocation()
+
+// 2. Get destination (apartment/meeting location)
+val destinationLat = booking.apartment.latitude
+val destinationLon = booking.apartment.longitude
+
+// 3. Calculate distance and duration
+val distanceData = apiService.calculateDistance(
+    currentLocation.latitude, currentLocation.longitude,
+    destinationLat, destinationLon
+)
+
+// 4. Show on Google Maps with route
+showMapWithRoute(currentLocation, destination, distanceData)
+
+// 5. Start location tracking
+startLocationTracking(booking.bookingId)
+```
+
+### 3. Location Tracking During Trip
+```kotlin
+// Start location updates every 30 seconds
+val locationCallback = object : LocationCallback() {
+    override fun onLocationResult(locationResult: LocationResult) {
+        val location = locationResult.lastLocation
+        
+        // Send location to API
+        apiService.trackLocation(
+            bookingId = currentBookingId,
+            latitude = location.latitude,
+            longitude = location.longitude
+        )
+        
+        // Update UI with current distance to destination
+        updateDistanceDisplay()
+    }
+}
+
+// Request location updates
+fusedLocationClient.requestLocationUpdates(
+    locationRequest,
+    locationCallback,
+    Looper.getMainLooper()
+)
+```
+
+### 4. Google Maps Integration
+```kotlin
+// Add to build.gradle
+implementation 'com.google.android.gms:play-services-maps:18.1.0'
+implementation 'com.google.android.gms:play-services-location:21.0.1'
+
+// In MapFragment/Activity
+class MapActivity : AppCompatActivity(), OnMapReadyCallback {
+    
+    private lateinit var mMap: GoogleMap
+    
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        
+        // Show user location
+        mMap.isMyLocationEnabled = true
+        
+        // Add destination marker
+        val destination = LatLng(booking.meetingLatitude, booking.meetingLongitude)
+        mMap.addMarker(
+            MarkerOptions()
+                .position(destination)
+                .title("Meeting Location")
+        )
+        
+        // Draw route
+        drawRoute(currentLocation, destination)
+    }
+    
+    private fun drawRoute(start: LatLng, end: LatLng) {
+        // Use Google Directions API or display straight line
+        val polylineOptions = PolylineOptions()
+            .add(start)
+            .add(end)
+            .width(8f)
+            .color(Color.BLUE)
+        
+        mMap.addPolyline(polylineOptions)
+    }
+}
+```
+
+## Data Models for Android
+
+### LocationUpdateRequest
+```kotlin
+data class LocationUpdateRequest(
+    val latitude: Double,
+    val longitude: Double
+)
+```
+
+### DistanceRequest
+```kotlin
+data class DistanceRequest(
+    val startLatitude: Double,
+    val startLongitude: Double,
+    val endLatitude: Double,
+    val endLongitude: Double
+)
+```
+
+### DistanceResponse
+```kotlin
+data class DistanceResponse(
+    val distanceKm: Double,
+    val durationMinutes: Int,
+    val distanceText: String,
+    val durationText: String
+)
+```
+
+### BookingWithLocation
+```kotlin
+data class BookingWithLocation(
+    val bookingId: Int,
+    val postTitle: String,
+    val meetingTime: String?,
+    val placeMeet: String?,
+    val meetingLatitude: Double?,
+    val meetingLongitude: Double?,
+    val meetingAddress: String?,
+    val distanceToMeeting: Double?,
+    val estimatedArrivalTime: String?,
+    val isLocationTrackingEnabled: Boolean?,
+    // ... other booking fields
+)
+```
+
+## Retrofit API Service Interface
+
+```kotlin
+interface VLivingApiService {
+    
+    @POST("api/Location/update")
+    suspend fun updateLocation(@Body request: LocationUpdateRequest): ApiResponse<String>
+    
+    @POST("api/Location/calculate-distance")
+    suspend fun calculateDistance(@Body request: DistanceRequest): ApiResponse<DistanceResponse>
+    
+    @POST("api/Location/track/{bookingId}")
+    suspend fun trackLocation(
+        @Path("bookingId") bookingId: Int,
+        @Body request: LocationUpdateRequest
+    ): ApiResponse<TrackingResponse>
+    
+    @GET("api/Location/history/{bookingId}")
+    suspend fun getLocationHistory(@Path("bookingId") bookingId: Int): ApiResponse<List<LocationHistory>>
+    
+    @GET("api/Booking/my-bookings")
+    suspend fun getMyBookings(@QueryMap params: Map<String, String>): ApiResponse<PagedResponse<BookingWithLocation>>
+}
+```
+
+## Permissions Required (AndroidManifest.xml)
+
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.INTERNET" />
+
+<!-- Google Maps API Key -->
+<meta-data
+    android:name="com.google.android.geo.API_KEY"
+    android:value="${MAPS_API_KEY}" />
+```
+
+## UI/UX Flow Recommendations
+
+### 1. Booking List Screen
+- Show list of bookings
+- For each booking:
+  - Show booking details
+  - Show "Đi đến" button (primary action)
+  - Show estimated time if available
+
+### 2. "Đi đến" Flow
+1. **Permission Check**: Request location permissions
+2. **Loading**: Show "Đang tính toán..." while calling API
+3. **Route Display**: Show map with route and estimated time
+4. **Start Navigation**: Option to open in Google Maps app
+5. **Track Progress**: Start location tracking automatically
+
+### 3. During Trip
+- Show real-time distance to destination
+- Show estimated arrival time
+- Update every 30 seconds
+- Option to stop tracking
+
+### 4. Error Handling
+- No location permission: Show permission request
+- No internet: Show offline message
+- API error: Show fallback options
+- GPS disabled: Prompt to enable GPS
+
+## Testing Scenarios
+
+1. **Normal Flow**: User books → clicks "Đi đến" → sees route → travels → arrives
+2. **Offline Mode**: Handle when internet is unavailable
+3. **Permission Denied**: Graceful fallback when location denied
+4. **API Timeout**: Handle slow API responses
+5. **Background Tracking**: Ensure location updates when app backgrounded
+
+## Integration Notes
+
+- API returns Vietnamese text for duration ("phút")
+- All coordinates use decimal degrees format
+- Distance calculated in kilometers
+- Location tracking is optional (isLocationTrackingEnabled can be null/false)
+- Booking can exist without meeting location initially (all location fields can be null)
+- Use proper error handling for Google Maps API quotas
+
+## Security Considerations
+
+- Always send location data over HTTPS
+- Include proper authentication headers
+- Don't store sensitive location data locally
+- Respect user privacy preferences
+- Handle location permissions properly

@@ -60,6 +60,17 @@ public partial class User
     [Column(TypeName = "datetime")]
     public DateTime? LastLogin { get; set; }
 
+    [Column(TypeName = "decimal(10, 8)")]
+    public decimal? CurrentLatitude { get; set; }
+
+    [Column(TypeName = "decimal(11, 8)")]
+    public decimal? CurrentLongitude { get; set; }
+
+    [Column(TypeName = "datetime")]
+    public DateTime? LastLocationUpdate { get; set; }
+
+    public bool? IsLocationSharingEnabled { get; set; } = false;
+
     [InverseProperty("Renter")]
     public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
@@ -84,4 +95,7 @@ public partial class User
 
     [InverseProperty("User")]
     public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<LocationTrackingHistory> LocationTrackingHistories { get; set; } = new List<LocationTrackingHistory>();
 }

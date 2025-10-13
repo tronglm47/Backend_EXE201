@@ -329,13 +329,14 @@ namespace VLivingAPI.Controllers
         /// <response code="500">Internal server error</response>
         [HttpPost("landlord")]
         [BusinessAuthorize(BusinessRole.PostManagement)]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> CreatePostForLandLord([FromBody] PostRequest.PostCreateForLandLord request)
+        public async Task<IActionResult> CreatePostForLandLord([FromForm] PostRequest.PostCreateForLandLord request)
         {
             try
             {
@@ -401,13 +402,14 @@ namespace VLivingAPI.Controllers
         /// <response code="500">Internal server error</response>
         [HttpPut("landlord/{id}")]
         [BusinessAuthorize(BusinessRole.PostManagement)]
+        [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdatePostForLandLord(int id, [FromBody] PostRequest.PostUpdateForLandLord request)
+        public async Task<IActionResult> UpdatePostForLandLord(int id, [FromForm] PostRequest.PostUpdateForLandLord request)
         {
             try
             {

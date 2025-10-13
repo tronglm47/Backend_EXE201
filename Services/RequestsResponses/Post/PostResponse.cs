@@ -4,6 +4,14 @@ namespace Services.RequestsResponses.Post
 {
     public class PostResponse
     {
+        public class PostImageInfo
+        {
+            public int ImageId { get; set; }
+            public string ImageUrl { get; set; } = null!;
+            public int? DisplayOrder { get; set; }
+            public bool? IsPrimary { get; set; }
+        }
+
         public class PostGetAll
         {
             public int PostId { get; set; }
@@ -15,6 +23,7 @@ namespace Services.RequestsResponses.Post
             public string PostType { get; set; } = null!;
             public string Status { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
+            public List<PostImageInfo> Images { get; set; } = new List<PostImageInfo>();
         }
         public class PostGetAllForUser
         {
@@ -54,6 +63,7 @@ namespace Services.RequestsResponses.Post
             public string PostType { get; set; } = null!;
             public string Status { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
+            public List<PostImageInfo> Images { get; set; } = new List<PostImageInfo>();
         }
         public class PostDetailForLandLord
         {
@@ -68,6 +78,7 @@ namespace Services.RequestsResponses.Post
             public string PostType { get; set; } = null!;
             public string Status { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
+            public List<PostImageInfo> Images { get; set; } = new List<PostImageInfo>();
         }
     }
 }
