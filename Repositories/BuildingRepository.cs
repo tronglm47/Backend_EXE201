@@ -48,6 +48,7 @@ namespace Repositories
                 "buildingid" => isDescending ? query.OrderByDescending(s => s.BuildingId) : query.OrderBy(s => s.BuildingId),
                 "name" => isDescending ? query.OrderByDescending(s => s.Name) : query.OrderBy(s => s.Name),
                 "blockcode" => isDescending ? query.OrderByDescending(s => s.BlockCode) : query.OrderBy(s => s.BlockCode),
+                "maxfloor" => isDescending ? query.OrderByDescending(s => s.MaxFloor) : query.OrderBy(s => s.MaxFloor),
                 "subdivisionid" => isDescending ? query.OrderByDescending(s => s.SubdivisionId) : query.OrderBy(s => s.SubdivisionId),
                 "createdat" => isDescending ? query.OrderByDescending(s => s.CreatedAt) : query.OrderBy(s => s.CreatedAt),
                 _ => query.OrderBy(s => s.BuildingId),

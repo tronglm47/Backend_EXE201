@@ -32,13 +32,15 @@ namespace Services
         private readonly ILogger<PostService> _logger;
         private readonly PostField _fieldResponse;
         private readonly IMapper _mapper;
+        private readonly ICloudStorageService _cloudStorageService;
 
-        public PostService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PostService> logger)
+        public PostService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<PostService> logger, ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _fieldResponse = new PostField();
             _mapper = mapper;
             _logger = logger;
+            _cloudStorageService = cloudStorageService;
         }
 
         /// <summary>
@@ -64,6 +66,13 @@ namespace Services
 
             var selectedFields = queryParams.GetSelectFields();
 
+            // Load images for all posts
+            var postIds = posts.Select(p => p.PostId).ToList();
+            var allImages = (await _unitOfWork.PostImages.GetAllAsync())
+                .Where(img => postIds.Contains(img.PostId))
+                .GroupBy(img => img.PostId)
+                .ToDictionary(g => g.Key, g => g.OrderBy(img => img.DisplayOrder).ToList());
+
             var response = new PagedResponse<object>
             {
                 CurrentPage = queryParams.Page,
@@ -72,6 +81,18 @@ namespace Services
                 Items = posts.Select(p =>
                 {
                     var postResponse = _mapper.Map<PostResponse.PostGetAll>(p);
+                    
+                    // Add images
+                    postResponse.Images = allImages.ContainsKey(p.PostId)
+                        ? allImages[p.PostId].Select(img => new PostResponse.PostImageInfo
+                        {
+                            ImageId = img.ImageId,
+                            ImageUrl = img.ImageUrl,
+                            DisplayOrder = img.DisplayOrder,
+                            IsPrimary = img.IsPrimary
+                        }).ToList()
+                        : new List<PostResponse.PostImageInfo>();
+                    
                     return _fieldResponse.SelectFields(postResponse, selectedFields);
                 }).ToList()
             };
@@ -91,6 +112,10 @@ namespace Services
             }
 
             var postResponse = _mapper.Map<PostResponse.PostGetAll>(post);
+            
+            // Load images for this post
+            postResponse.Images = await LoadPostImagesAsync(id);
+            
             return _fieldResponse.SelectFields(postResponse, selectedFields);
         }
 
@@ -126,6 +151,13 @@ namespace Services
 
             var selectedFields = queryParams.GetSelectFields();
 
+            // Load images for all posts
+            var postIds = posts.Select(p => p.PostId).ToList();
+            var allImages = (await _unitOfWork.PostImages.GetAllAsync())
+                .Where(img => postIds.Contains(img.PostId))
+                .GroupBy(img => img.PostId)
+                .ToDictionary(g => g.Key, g => g.OrderBy(img => img.DisplayOrder).ToList());
+
             var response = new PagedResponse<object>
             {
                 CurrentPage = queryParams.Page,
@@ -158,7 +190,17 @@ namespace Services
                             BlockCode = p.Apartment?.Building?.BlockCode ?? "",
                             // Subdivision details
                             SubdivisionId = p.Apartment?.Building?.SubdivisionId.ToString() ?? "",
-                            SubdivisionName = p.Apartment?.Building?.Subdivision?.Name ?? ""
+                            SubdivisionName = p.Apartment?.Building?.Subdivision?.Name ?? "",
+                            // Images
+                            Images = allImages.ContainsKey(p.PostId)
+                                ? allImages[p.PostId].Select(img => new PostResponse.PostImageInfo
+                                {
+                                    ImageId = img.ImageId,
+                                    ImageUrl = img.ImageUrl,
+                                    DisplayOrder = img.DisplayOrder,
+                                    IsPrimary = img.IsPrimary
+                                }).ToList()
+                                : new List<PostResponse.PostImageInfo>()
                         };
 
                         // If select fields specified, filter the response
@@ -209,6 +251,7 @@ namespace Services
                 PostType = post.PostType,
                 Status = post.Status,
                 CreatedAt = post.CreatedAt ?? DateTime.UtcNow,
+                Images = await LoadPostImagesAsync(post.PostId),
                 Apartment = new ApartmentResponse.ApartmentDetail
                 {
                     ApartmentId = post.Apartment.ApartmentId,
@@ -397,7 +440,7 @@ namespace Services
                     Area = (decimal)request.Apartment.Area,
                     ApartmentType = request.Apartment.ApartmentType,
                     Status = request.Apartment.Status ?? "Available",
-                    NumberBathroom = request.Apartment.NumberOfBedrooms,
+                    NumberBathroom = request.Apartment.NumberBathroom,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -452,6 +495,12 @@ namespace Services
                     }
                     await _unitOfWork.SaveChangesAsync();
                     _logger.LogInformation("Created {Count} utility associations for Post {PostId}", request.UtilityIds.Count, post.PostId);
+                }
+
+                // Upload images if provided
+                if (request.Images != null && request.Images.Any())
+                {
+                    await UploadPostImagesAsync(post.PostId, request.Images, request.PrimaryImageIndex);
                 }
 
                 _logger.LogInformation("Post created successfully for LandLord {UserId}, PostId: {PostId}, ApartmentId: {ApartmentId}", 
@@ -582,6 +631,7 @@ namespace Services
                 apartment.Area = (decimal)request.Apartment.Area;
                 apartment.ApartmentType = request.Apartment.ApartmentType;
                 apartment.Status = request.Apartment.Status ?? apartment.Status;
+                apartment.NumberBathroom = request.Apartment.NumberBathroom;
 
                 await _unitOfWork.Apartments.UpdateAsync(apartment);
 
@@ -637,6 +687,12 @@ namespace Services
                         _logger.LogInformation("Created {Count} new utility associations for Post {PostId}", request.UtilityIds.Count, postId);
                     }
                 }
+
+                // Handle image updates
+                if (request.Images != null || request.ExistingImageUrls != null)
+                {
+                    await UpdatePostImagesAsync(postId, request.Images, request.ExistingImageUrls, request.PrimaryImageIndex);
+                }
                 
                 _logger.LogInformation("Post {PostId} and Apartment {ApartmentId} updated successfully by LandLord {UserId}", 
                     postId, apartment.ApartmentId, userId);
@@ -686,5 +742,167 @@ namespace Services
                 throw;
             }
         }
+
+        #region Private Helper Methods for Image Management
+
+        /// <summary>
+        /// Load images for a post
+        /// </summary>
+        private async Task<List<PostResponse.PostImageInfo>> LoadPostImagesAsync(int postId)
+        {
+            var images = (await _unitOfWork.PostImages.GetAllAsync())
+                .Where(img => img.PostId == postId)
+                .OrderBy(img => img.DisplayOrder)
+                .Select(img => new PostResponse.PostImageInfo
+                {
+                    ImageId = img.ImageId,
+                    ImageUrl = img.ImageUrl,
+                    DisplayOrder = img.DisplayOrder,
+                    IsPrimary = img.IsPrimary
+                })
+                .ToList();
+
+            return images;
+        }
+
+        /// <summary>
+        /// Upload post images and save to database
+        /// </summary>
+        private async Task UploadPostImagesAsync(int postId, List<Microsoft.AspNetCore.Http.IFormFile> images, int? primaryImageIndex = null)
+        {
+            try
+            {
+                // Upload images to cloud storage
+                var imageUrls = await _cloudStorageService.UploadMultipleImagesAsync(images, "posts", postId);
+
+                // Only save to database if we have successful uploads
+                if (!imageUrls.Any())
+                {
+                    _logger.LogWarning("No images were successfully uploaded for Post {PostId}. Google Cloud Storage may be unavailable.", postId);
+                    return; // Continue without images instead of failing
+                }
+
+                // Save image URLs to database
+                int displayOrder = 1;
+                for (int i = 0; i < imageUrls.Count; i++)
+                {
+                    var postImage = new PostImage
+                    {
+                        PostId = postId,
+                        ImageUrl = imageUrls[i],
+                        DisplayOrder = displayOrder++,
+                        IsPrimary = (primaryImageIndex.HasValue && i == primaryImageIndex.Value),
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _unitOfWork.PostImages.PrepareCreate(postImage);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("Uploaded {Count} images for Post {PostId}", imageUrls.Count, postId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading images for Post {PostId}. Post creation will continue without images.", postId);
+                // Don't throw - allow post creation to succeed even if image upload fails
+            }
+        }
+
+        /// <summary>
+        /// Update post images - delete removed ones and upload new ones
+        /// </summary>
+        private async Task UpdatePostImagesAsync(
+            int postId, 
+            List<Microsoft.AspNetCore.Http.IFormFile>? newImages, 
+            List<string>? existingImageUrls,
+            int? primaryImageIndex = null)
+        {
+            try
+            {
+                // Get current images from database
+                var currentImages = (await _unitOfWork.PostImages.GetAllAsync())
+                    .Where(pi => pi.PostId == postId)
+                    .ToList();
+
+                // Determine which images to delete (those not in existingImageUrls)
+                var imagesToDelete = currentImages
+                    .Where(img => existingImageUrls == null || !existingImageUrls.Contains(img.ImageUrl))
+                    .ToList();
+
+                // Delete images from cloud and database
+                if (imagesToDelete.Any())
+                {
+                    var imageUrlsToDelete = imagesToDelete.Select(img => img.ImageUrl).ToList();
+                    await _cloudStorageService.DeleteImagesAsync(imageUrlsToDelete);
+
+                    foreach (var image in imagesToDelete)
+                    {
+                        _unitOfWork.PostImages.PrepareRemove(image);
+                    }
+
+                    await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("Deleted {Count} images for Post {PostId}", imagesToDelete.Count, postId);
+                }
+
+                // Upload new images if provided
+                if (newImages != null && newImages.Any())
+                {
+                    var newImageUrls = await _cloudStorageService.UploadMultipleImagesAsync(newImages, "posts", postId);
+
+                    // Only proceed if we have successful uploads
+                    if (newImageUrls.Any())
+                    {
+                        // Get next display order
+                        var maxDisplayOrder = currentImages.Any() ? currentImages.Max(img => img.DisplayOrder ?? 0) : 0;
+
+                        for (int i = 0; i < newImageUrls.Count; i++)
+                        {
+                            var postImage = new PostImage
+                            {
+                                PostId = postId,
+                                ImageUrl = newImageUrls[i],
+                                DisplayOrder = ++maxDisplayOrder,
+                                IsPrimary = (primaryImageIndex.HasValue && i == primaryImageIndex.Value),
+                                CreatedAt = DateTime.UtcNow
+                            };
+
+                            _unitOfWork.PostImages.PrepareCreate(postImage);
+                        }
+
+                        await _unitOfWork.SaveChangesAsync();
+                        _logger.LogInformation("Added {Count} new images for Post {PostId}", newImageUrls.Count, postId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No new images were successfully uploaded for Post {PostId}. Google Cloud Storage may be unavailable.", postId);
+                    }
+                }
+
+                // Update primary image flag if specified
+                if (primaryImageIndex.HasValue && existingImageUrls != null && primaryImageIndex.Value < existingImageUrls.Count)
+                {
+                    var primaryImageUrl = existingImageUrls[primaryImageIndex.Value];
+                    var allImages = (await _unitOfWork.PostImages.GetAllAsync())
+                        .Where(pi => pi.PostId == postId)
+                        .ToList();
+
+                    foreach (var img in allImages)
+                    {
+                        img.IsPrimary = (img.ImageUrl == primaryImageUrl);
+                        _unitOfWork.PostImages.PrepareUpdate(img);
+                    }
+
+                    await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("Updated primary image for Post {PostId}", postId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating images for Post {PostId}. Post update will continue.", postId);
+                // Don't throw - allow post update to succeed even if image operations fail
+            }
+        }
+
+        #endregion
     }
 }

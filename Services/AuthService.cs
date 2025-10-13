@@ -148,7 +148,9 @@ namespace Services
                     FullName = user.FullName,
                     PhoneNumber = user.PhoneNumber,
                     ProfilePictureURL = user.ProfilePictureUrl,
-                    Bio = user.Bio
+                    Bio = user.Bio,
+                    IsEmailVerified = user.IsEmailVerified ?? false,
+                    CreatedAt = user.CreatedAt ?? DateTime.UtcNow
                 };
             }
             catch (KeyNotFoundException)

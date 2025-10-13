@@ -25,6 +25,8 @@ public partial class Building
     [StringLength(50)]
     public string BlockCode { get; set; }
 
+    public int? MaxFloor { get; set; }
+
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 

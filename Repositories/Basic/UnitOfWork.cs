@@ -8,6 +8,7 @@ namespace Repositories.Basic
         IBuildingRepository Buildings { get; }
         IPostUtilityRepository PostUtilities { get; }
         IPostRepository Posts { get; }
+        IPostImageRepository PostImages { get; }
         ISubdivisionRepository Subdivisions { get; }
         IUtilityRepository Utilities { get; }
         Task<int> SaveChangesAsync();
@@ -20,6 +21,7 @@ namespace Repositories.Basic
         private IApartmentRepository? _apartmentRepository;
         private IBuildingRepository? _buildingRepository;
         private IPostRepository? _postRepository;
+        private IPostImageRepository? _postImageRepository;
         private IPostUtilityRepository? _postUtilityRepository;
         private ISubdivisionRepository? _subdivisionRepository;
         private IUtilityRepository? _utilityRepository;
@@ -60,6 +62,14 @@ namespace Repositories.Basic
             {
                 _postRepository ??= new PostRepository(_context);
                 return _postRepository;
+            }
+        }
+        public IPostImageRepository PostImages
+        {
+            get
+            {
+                _postImageRepository ??= new PostImageRepository(_context);
+                return _postImageRepository;
             }
         }
         public IPostUtilityRepository PostUtilities

@@ -19,6 +19,12 @@ namespace Repositories
         Task UpdatePasswordAsync(int userId, string newPassword);
         Task UpdateLastLoginAsync(int userId);
         Task<string> GetPasswordByUserIdAsync(int userId);
+
+        // Admin CRUD methods
+        Task<IEnumerable<User>> GetAllUsersAsync(int page, int pageSize, string? searchField, string? searchValue, string sortBy, bool isDescending);
+        Task<int> CountUsersAsync(string? searchField, string? searchValue);
+        Task<bool> UpdateUserAsync(User user);
+        Task<bool> DeleteUserAsync(int userId);
     }
     public class UserRepository : IUserRepository
     {
@@ -154,6 +160,104 @@ namespace Repositories
         {
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
             return user?.Password ?? string.Empty;
+        }
+
+        // Admin CRUD methods implementation
+        public async Task<IEnumerable<User>> GetAllUsersAsync(int page, int pageSize, string? searchField, string? searchValue, string sortBy, bool isDescending)
+        {
+            IQueryable<User> query = _context.Users.AsNoTracking();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchField) && !string.IsNullOrWhiteSpace(searchValue))
+            {
+                var normalizedSearchValue = searchValue.ToLower();
+                query = searchField.ToLower() switch
+                {
+                    "username" => query.Where(u => u.Username.ToLower().Contains(normalizedSearchValue)),
+                    "email" => query.Where(u => u.Email.ToLower().Contains(normalizedSearchValue)),
+                    "fullname" => query.Where(u => u.FullName != null && u.FullName.ToLower().Contains(normalizedSearchValue)),
+                    "role" => query.Where(u => u.Role.ToLower().Contains(normalizedSearchValue)),
+                    _ => query
+                };
+            }
+
+            // Apply sorting
+            query = sortBy.ToLower() switch
+            {
+                "userid" => isDescending ? query.OrderByDescending(u => u.UserId) : query.OrderBy(u => u.UserId),
+                "username" => isDescending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
+                "email" => isDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+                "fullname" => isDescending ? query.OrderByDescending(u => u.FullName) : query.OrderBy(u => u.FullName),
+                "role" => isDescending ? query.OrderByDescending(u => u.Role) : query.OrderBy(u => u.Role),
+                "createdat" => isDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
+                _ => query.OrderBy(u => u.UserId)
+            };
+
+            // Apply pagination
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountUsersAsync(string? searchField, string? searchValue)
+        {
+            IQueryable<User> query = _context.Users.AsNoTracking();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchField) && !string.IsNullOrWhiteSpace(searchValue))
+            {
+                var normalizedSearchValue = searchValue.ToLower();
+                query = searchField.ToLower() switch
+                {
+                    "username" => query.Where(u => u.Username.ToLower().Contains(normalizedSearchValue)),
+                    "email" => query.Where(u => u.Email.ToLower().Contains(normalizedSearchValue)),
+                    "fullname" => query.Where(u => u.FullName != null && u.FullName.ToLower().Contains(normalizedSearchValue)),
+                    "role" => query.Where(u => u.Role.ToLower().Contains(normalizedSearchValue)),
+                    _ => query
+                };
+            }
+
+            return await query.CountAsync();
+        }
+
+        public async Task<bool> UpdateUserAsync(User user)
+        {
+            try
+            {
+                _context.Entry(user).State = EntityState.Modified;
+                // Don't track password field in update
+                _context.Entry(user).Property(u => u.Password).IsModified = false;
+                
+                var result = await _context.SaveChangesAsync();
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user with UserId: {UserId}", user.UserId);
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteUserAsync(int userId)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return false;
+                }
+
+                _context.Users.Remove(user);
+                var result = await _context.SaveChangesAsync();
+                return result > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user with UserId: {UserId}", userId);
+                return false;
+            }
         }
     }
 }

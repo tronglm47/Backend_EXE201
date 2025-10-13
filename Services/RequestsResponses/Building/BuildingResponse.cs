@@ -11,6 +11,7 @@ namespace Services.RequestsResponses.Building
             public string? SubdivisionName { get; set; }
             public string Name { get; set; } = string.Empty;
             public string BlockCode { get; set; } = string.Empty;
+            public int? MaxFloor { get; set; }
             public DateTime? CreatedAt { get; set; }
         }
         public class BuildingDetail
@@ -20,6 +21,7 @@ namespace Services.RequestsResponses.Building
             public SubdivisionResponse.SubdivisionDetail? Subdivision { get; set; }
             public string Name { get; set; } = string.Empty;
             public string BlockCode { get; set; } = string.Empty;
+            public int? MaxFloor { get; set; }
             public DateTime? CreatedAt { get; set; }
         }
     }

@@ -12,12 +12,15 @@ using Repositories.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load configuration based on environment
-if (builder.Environment.IsProduction())
-{
-    builder.Configuration
-        .AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true);
-}
+// Configuration is automatically loaded in this order:
+// 1. appsettings.json
+// 2. appsettings.{Environment}.json (overrides appsettings.json)
+// No need to manually add them again as WebApplicationBuilder does this by default
+
+// Debug: Print connection string to verify which one is being used
+// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Console.WriteLine($"=== ENVIRONMENT: {builder.Environment.EnvironmentName} ===");
+// Console.WriteLine($"=== CONNECTION STRING: {connectionString} ===");
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -73,11 +76,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 //
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IUtilityService, UtilityService>();
 builder.Services.AddScoped<IPostUtilityService, PostUtilityService>();
 builder.Services.AddScoped<ISubdivisionService, SubdivisionService>();
 builder.Services.AddScoped<IBuildingService, BuildingService>();
+builder.Services.AddScoped<IApartmentService, ApartmentService>();
 //
 
 // Background Services

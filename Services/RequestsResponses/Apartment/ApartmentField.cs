@@ -4,7 +4,7 @@
     {
         protected override List<string> ValidFields => new List<string>
         {
-            "apartmentid", "buildingid", "apartmentcode", "floor", "area", "apartmenttype", "status", "createdat"
+            "apartmentid", "buildingid", "apartmentcode", "floor", "area", "apartmenttype", "status", "createdat", "postids"
         };
         protected override void MapField<T>(string field, T item, Dictionary<string, object?> result)
         {
@@ -44,6 +44,9 @@
                 case "createdat":
                     result["createdat"] = (item as ApartmentResponse.ApartmentGetAll)?.CreatedAt
                                             ?? (item as ApartmentResponse.ApartmentDetail)?.CreatedAt;
+                    break;
+                case "postids":
+                    result["postids"] = (item as ApartmentResponse.ApartmentGetAll)?.PostIds;
                     break;
                 default:
                     result["apartmentid"] = (item as ApartmentResponse.ApartmentGetAll)?.ApartmentId

@@ -417,6 +417,7 @@ docker-compose.override.yml
 *.backup
 *.bak
 *.tmp
+DATABASE-CONFIG.md
 Deloy.txt
 Deploy.txt
 deploy*.txt

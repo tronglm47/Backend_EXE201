@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Services.RequestsResponses.Apartment;
+using Microsoft.AspNetCore.Http;
 
 namespace Services.RequestsResponses.Post
 {
@@ -26,6 +27,8 @@ namespace Services.RequestsResponses.Post
             public string status { get; set; }
             public List<int>? UtilityIds { get; set; }
             public ApartmentRequest.ApartmentCreate Apartment { get; set; }
+            public List<IFormFile>? Images { get; set; }
+            public int? PrimaryImageIndex { get; set; }
         }
         public class PostUpdateForLandLord
         {
@@ -36,6 +39,9 @@ namespace Services.RequestsResponses.Post
             public string status { get; set; }
             public List<int>? UtilityIds { get; set; }
             public ApartmentRequest.ApartmentUpdate Apartment { get; set; }
+            public List<IFormFile>? Images { get; set; }
+            public List<string>? ExistingImageUrls { get; set; }
+            public int? PrimaryImageIndex { get; set; }
         }
     }
 }
