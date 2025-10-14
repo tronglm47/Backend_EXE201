@@ -25,6 +25,8 @@ public partial class VLivingDbContext : DbContext
 
     public virtual DbSet<Building> Buildings { get; set; }
 
+    public virtual DbSet<ChatUsage> ChatUsages { get; set; }
+
     public virtual DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
 
     public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
@@ -236,6 +238,22 @@ public partial class VLivingDbContext : DbContext
             entity.HasKey(e => e.UtilityId).HasName("PK__Utilitie__8B7E2E3FD0894524");
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+        });
+
+        modelBuilder.Entity<ChatUsage>(entity =>
+        {
+            entity.ToTable("ChatUsage");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.RequestTime).HasDefaultValueSql("(getutcdate())");
+            entity.Property(e => e.IsSuccess).HasDefaultValue(true);
+            entity.Property(e => e.TokensUsed).HasDefaultValue(0);
+
+            entity.HasOne(d => d.User)
+                .WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_ChatUsage_User");
         });
 
         OnModelCreatingPartial(modelBuilder);
