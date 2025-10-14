@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VLivingAPI.Authorization;
 using Services;
 using Services.RequestsResponses;
 using Services.RequestsResponses.User;
+using System.Security.Claims;
 
 namespace VLivingAPI.Controllers
 {
@@ -179,6 +181,62 @@ namespace VLivingAPI.Controllers
             {
                 _logger.LogError(ex, "Error deleting user with ID {UserId}", id);
                 return StatusCode(500, new { message = "An error occurred while deleting the user", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Toggle location sharing setting for the current user
+        /// </summary>
+        /// <param name="request">Location sharing setting</param>
+        /// <returns>Update result</returns>
+        /// <response code="200">Location sharing setting updated successfully</response>
+        /// <response code="400">Invalid request data</response>
+        /// <response code="401">Unauthorized - User not authenticated</response>
+        /// <response code="404">User not found</response>
+        /// <response code="500">Internal server error</response>
+        [HttpPatch("location-sharing")]
+        [Authorize]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateLocationSharing([FromBody] UserRequest.UpdateLocationSharingRequest request)
+        {
+            try
+            {
+                if (request == null)
+                {
+                    return BadRequest(new { message = "Request body cannot be null" });
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new { message = "Invalid request data", errors = ModelState });
+                }
+
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid user token" });
+                }
+
+                var result = await _userService.UpdateLocationSharingAsync(userId, request.IsLocationSharingEnabled);
+
+                if (result)
+                {
+                    return Ok(new { 
+                        message = "Location sharing setting updated successfully",
+                        isLocationSharingEnabled = request.IsLocationSharingEnabled
+                    });
+                }
+
+                return NotFound(new { message = "User not found" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating location sharing for user");
+                return StatusCode(500, new { message = "An error occurred while updating location sharing setting", error = ex.Message });
             }
         }
     }

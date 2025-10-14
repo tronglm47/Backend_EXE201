@@ -13,6 +13,7 @@ namespace Services
         Task<object?> GetByIdAsync(int id, List<string> selectedFields);
         Task<bool> UpdateAsync(UserRequest.AdminUpdateUserRequest request, int id);
         Task<bool> DeleteAsync(int id);
+        Task<bool> UpdateLocationSharingAsync(int userId, bool isLocationSharingEnabled);
     }
 
     public class UserService : IUserService
@@ -134,6 +135,35 @@ namespace Services
             }
 
             return await _userRepository.DeleteUserAsync(id);
+        }
+
+        public async Task<bool> UpdateLocationSharingAsync(int userId, bool isLocationSharingEnabled)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found", userId);
+                    return false;
+                }
+
+                user.IsLocationSharingEnabled = isLocationSharingEnabled;
+                var result = await _userRepository.UpdateUserAsync(user);
+                
+                if (result)
+                {
+                    _logger.LogInformation("Location sharing updated to {IsEnabled} for user {UserId}", 
+                        isLocationSharingEnabled, userId);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating location sharing for user {UserId}", userId);
+                return false;
+            }
         }
     }
 }
