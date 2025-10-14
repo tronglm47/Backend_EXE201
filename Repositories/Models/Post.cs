@@ -41,6 +41,11 @@ public partial class Post
     [Column(TypeName = "datetime")]
     public DateTime? CreatedAt { get; set; }
 
+    [Column(TypeName = "decimal(3, 2)")]
+    public decimal? AverageRating { get; set; }
+
+    public int TotalReviews { get; set; } = 0;
+
     [ForeignKey("ApartmentId")]
     [InverseProperty("Posts")]
     public virtual Apartment Apartment { get; set; }
@@ -53,6 +58,9 @@ public partial class Post
 
     [InverseProperty("Post")]
     public virtual ICollection<PostUtility> PostUtilities { get; set; } = new List<PostUtility>();
+
+    [InverseProperty("Post")]
+    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     [ForeignKey("UserId")]
     [InverseProperty("Posts")]

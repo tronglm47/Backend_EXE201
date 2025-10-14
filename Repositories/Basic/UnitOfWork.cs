@@ -10,10 +10,13 @@ namespace Repositories.Basic
         IPostUtilityRepository PostUtilities { get; }
         IPostRepository Posts { get; }
         IPostImageRepository PostImages { get; }
+        IReviewRepository Reviews { get; }
         ISubdivisionRepository Subdivisions { get; }
         IUtilityRepository Utilities { get; }
+        IUserRepository Users { get; }
         Task<int> SaveChangesAsync();
         int SaveChanges();
+        Task<int> SaveAsync();
     }
 
     public class UnitOfWork : IUnitOfWork
@@ -25,8 +28,10 @@ namespace Repositories.Basic
         private IPostRepository? _postRepository;
         private IPostImageRepository? _postImageRepository;
         private IPostUtilityRepository? _postUtilityRepository;
+        private IReviewRepository? _reviewRepository;
         private ISubdivisionRepository? _subdivisionRepository;
         private IUtilityRepository? _utilityRepository;
+        private IUserRepository? _userRepository;
 
         public UnitOfWork(VLivingDbContext context)
         {
@@ -91,12 +96,31 @@ namespace Repositories.Basic
                 return _postUtilityRepository;
             }
         }
+
+        public IReviewRepository Reviews
+        {
+            get
+            {
+                _reviewRepository ??= new ReviewRepository(_context);
+                return _reviewRepository;
+            }
+        }
+
         public IUtilityRepository Utilities
         {
             get
             {
                 _utilityRepository ??= new UtilityRepository(_context);
                 return _utilityRepository;
+            }
+        }
+
+        public IUserRepository Users
+        {
+            get
+            {
+                _userRepository ??= new UserRepository(_context);
+                return _userRepository;
             }
         }
 
@@ -108,6 +132,11 @@ namespace Repositories.Basic
         public int SaveChanges()
         {
             return _context.SaveChanges();
+        }
+
+        public async Task<int> SaveAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
 
         public void Dispose()

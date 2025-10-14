@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Repositories.Basic;
 using Repositories.Models;
@@ -8,6 +8,7 @@ using Services.RequestsResponses.Post;
 using Services.RequestsResponses.Apartment;
 using Services.RequestsResponses.Building;
 using Services.RequestsResponses.Subdivision;
+using static Services.Utils.NullValueHandler;
 
 namespace Services
 {
@@ -180,7 +181,7 @@ namespace Services
                             CreatedAt = p.CreatedAt ?? DateTime.UtcNow,
                             // Apartment details
                             ApartmentId = p.ApartmentId,
-                            ApartmentCode = p.Apartment?.ApartmentCode ?? "",
+                            ApartmentCode = ApartmentHandler.GetApartmentCode(p.Apartment),
                             Floor = p.Apartment?.Floor ?? 0,
                             Area = (double)(p.Apartment?.Area ?? 0),
                             NumberBathroom = p.Apartment?.NumberBathroom ?? 0,

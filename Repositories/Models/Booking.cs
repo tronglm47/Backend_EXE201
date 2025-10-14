@@ -62,4 +62,7 @@ public partial class Booking
 
     [InverseProperty("Booking")]
     public virtual ICollection<LocationTrackingHistory> LocationTrackingHistories { get; set; } = new List<LocationTrackingHistory>();
+
+    [InverseProperty("Booking")]
+    public virtual Review Review { get; set; }
 }

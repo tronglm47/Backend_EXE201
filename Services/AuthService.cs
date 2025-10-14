@@ -193,9 +193,16 @@ namespace Services
                     Role = string.IsNullOrWhiteSpace(request.Role) ? UserRoleConstants.UserRole : request.Role.Trim(),
                     FullName = string.IsNullOrWhiteSpace(request.FullName) ? null : request.FullName.Trim(),
                     PhoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim(),
+                    ProfilePictureUrl = null, // Default null, can be updated later
                     Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim(),
+                    SubscriptionPlanId = null, // Default null, no subscription on registration
+                    IsEmailVerified = false,
                     CreatedAt = DateTime.UtcNow,
-                    IsEmailVerified = false
+                    LastLogin = null, // Will be set on first login
+                    CurrentLatitude = null, // Location not provided on registration
+                    CurrentLongitude = null, // Location not provided on registration
+                    LastLocationUpdate = null, // No location update on registration
+                    IsLocationSharingEnabled = false // Default disabled for privacy
                 };
 
                 // Save user to database

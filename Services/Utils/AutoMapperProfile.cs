@@ -7,6 +7,7 @@ using Services.RequestsResponses.PostUtility;
 using Services.RequestsResponses.Post;
 using Services.RequestsResponses.Apartment;
 using Services.RequestsResponses.User;
+using Services.RequestsResponses.Review;
 
 namespace Services.Utils
 {
@@ -69,6 +70,16 @@ namespace Services.Utils
             CreateMap<UserResponse.UserGetAll, User>().ReverseMap();
             CreateMap<UserResponse.UserDetail, User>().ReverseMap();
             CreateMap<UserRequest.AdminUpdateUserRequest, User>();
+
+            // Review
+            CreateMap<Review, ReviewResponse.ReviewInfo>().ReverseMap();
+            CreateMap<Review, ReviewResponse.ReviewDetail>().ReverseMap();
+            CreateMap<ReviewRequest.ReviewCreate, Review>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
+            CreateMap<ReviewRequest.ReviewUpdate, Review>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
         }
     }
 }

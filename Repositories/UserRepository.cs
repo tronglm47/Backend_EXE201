@@ -37,6 +37,13 @@ namespace Repositories
             _logger = logger;
         }
 
+        // Constructor for UnitOfWork without logger
+        public UserRepository(VLivingDbContext context)
+        {
+            _context = context;
+            _logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<UserRepository>.Instance;
+        }
+
         public async Task<User> GetByUsernameAsync(string username)
         {
             return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Username == username);

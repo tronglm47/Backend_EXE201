@@ -98,4 +98,7 @@ public partial class User
 
     [InverseProperty("User")]
     public virtual ICollection<LocationTrackingHistory> LocationTrackingHistories { get; set; } = new List<LocationTrackingHistory>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
