@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Repositories.Basic;
 using Repositories.Models;
@@ -83,6 +83,9 @@ namespace Services
                 {
                     var postResponse = _mapper.Map<PostResponse.PostGetAll>(p);
                     
+                    postResponse.UserName = p.User?.Username ?? "Unknown";
+                    postResponse.PhoneNumber = p.User?.PhoneNumber;
+                    
                     // Add images
                     postResponse.Images = allImages.ContainsKey(p.PostId)
                         ? allImages[p.PostId].Select(img => new PostResponse.PostImageInfo
@@ -93,6 +96,14 @@ namespace Services
                             IsPrimary = img.IsPrimary
                         }).ToList()
                         : new List<PostResponse.PostImageInfo>();
+                    
+                    // Add utilities
+                    postResponse.Utilities = p.PostUtilities?.Select(pu => new PostResponse.PostUtilityInfo
+                    {
+                        UtilityId = pu.UtilityId,
+                        Name = pu.Utility?.Name ?? "",
+                        Notes = pu.Notes
+                    }).ToList() ?? new List<PostResponse.PostUtilityInfo>();
                     
                     return _fieldResponse.SelectFields(postResponse, selectedFields);
                 }).ToList()
@@ -114,8 +125,26 @@ namespace Services
 
             var postResponse = _mapper.Map<PostResponse.PostGetAll>(post);
             
+            // Ensure user info is mapped correctly
+            var username = post.User?.Username ?? "Unknown";
+            // Handle case where username is "string" - replace with fallback
+            if (username.Equals("string", StringComparison.OrdinalIgnoreCase))
+            {
+                username = $"User{post.UserId}";
+            }
+            postResponse.UserName = username;
+            postResponse.PhoneNumber = post.User?.PhoneNumber;
+            
             // Load images for this post
             postResponse.Images = await LoadPostImagesAsync(id);
+            
+            // Load utilities for this post
+            postResponse.Utilities = post.PostUtilities?.Select(pu => new PostResponse.PostUtilityInfo
+            {
+                UtilityId = pu.UtilityId,
+                Name = pu.Utility?.Name ?? "",
+                Notes = pu.Notes
+            }).ToList() ?? new List<PostResponse.PostUtilityInfo>();
             
             return _fieldResponse.SelectFields(postResponse, selectedFields);
         }
@@ -172,7 +201,10 @@ namespace Services
                         {
                             PostId = p.PostId,
                             UserId = p.UserId,
-                            UserName = p.User?.Username ?? "Unknown",
+                            UserName = p.User?.Username?.Equals("string", StringComparison.OrdinalIgnoreCase) == true 
+                                ? $"User{p.UserId}" 
+                                : (p.User?.Username ?? "Unknown"),
+                            PhoneNumber = p.User?.PhoneNumber,
                             Title = p.Title,
                             Description = p.Description,
                             Price = (double?)p.Price,
@@ -201,7 +233,14 @@ namespace Services
                                     DisplayOrder = img.DisplayOrder,
                                     IsPrimary = img.IsPrimary
                                 }).ToList()
-                                : new List<PostResponse.PostImageInfo>()
+                                : new List<PostResponse.PostImageInfo>(),
+                            // Utilities
+                            Utilities = p.PostUtilities?.Select(pu => new PostResponse.PostUtilityInfo
+                            {
+                                UtilityId = pu.UtilityId,
+                                Name = pu.Utility?.Name ?? "",
+                                Notes = pu.Notes
+                            }).ToList() ?? new List<PostResponse.PostUtilityInfo>()
                         };
 
                         // If select fields specified, filter the response
@@ -245,7 +284,10 @@ namespace Services
                 PostId = post.PostId,
                 ApartmentId = post.ApartmentId,
                 UserId = post.UserId,
-                UserName = post.User?.Username ?? "Unknown",
+                UserName = post.User?.Username?.Equals("string", StringComparison.OrdinalIgnoreCase) == true 
+                    ? $"User{post.UserId}" 
+                    : (post.User?.Username ?? "Unknown"),
+                PhoneNumber = post.User?.PhoneNumber,
                 Title = post.Title,
                 Description = post.Description,
                 Price = (double?)post.Price,
@@ -262,7 +304,7 @@ namespace Services
                     Area = (double)(post.Apartment.Area ?? 0),
                     ApartmentType = post.Apartment.ApartmentType ?? "",
                     Status = post.Apartment.Status,
-                    NumberOfBedrooms = post.Apartment.NumberBathroom ?? 0, // Note: Model has NumberBathroom
+                    NumberBathroom = post.Apartment.NumberBathroom ?? 0, // Note: Model has NumberBathroom
                     CreatedAt = post.Apartment.CreatedAt ?? DateTime.UtcNow,
                     Building = post.Apartment.Building != null ? new BuildingResponse.BuildingDetail
                     {
@@ -280,7 +322,13 @@ namespace Services
                             CreatedAt = post.Apartment.Building.Subdivision.CreatedAt
                         } : null!
                     } : null!
-                }
+                },
+                Utilities = post.PostUtilities?.Select(pu => new PostResponse.PostUtilityInfo
+                {
+                    UtilityId = pu.UtilityId,
+                    Name = pu.Utility?.Name ?? "",
+                    Notes = pu.Notes
+                }).ToList() ?? new List<PostResponse.PostUtilityInfo>()
             };
 
             _logger.LogInformation("Successfully retrieved detail for landlord post {PostId}", id);
@@ -319,7 +367,10 @@ namespace Services
                 {
                     PostId = post.PostId,
                     UserId = post.UserId,
-                    UserName = post.User?.Username ?? "Unknown",
+                    UserName = post.User?.Username?.Equals("string", StringComparison.OrdinalIgnoreCase) == true 
+                        ? $"User{post.UserId}" 
+                        : (post.User?.Username ?? "Unknown"),
+                    PhoneNumber = post.User?.PhoneNumber,
                     Title = post.Title,
                     Description = post.Description
                 }).ToList<object>()
@@ -351,6 +402,7 @@ namespace Services
                 PostId = post.PostId,
                 UserId = post.UserId,
                 UserName = post.User?.Username ?? "Unknown",
+                PhoneNumber = post.User?.PhoneNumber,
                 Title = post.Title,
                 Description = post.Description,
                 CreatedAt = post.CreatedAt ?? DateTime.UtcNow

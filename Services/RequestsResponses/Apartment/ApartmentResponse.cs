@@ -13,7 +13,7 @@ namespace Services.RequestsResponses.Apartment
             public double Area { get; set; }
             public string ApartmentType { get; set; }
             public string Status { get; set; }
-            public int NumberOfBedrooms { get; set; }
+            public int NumberBathroom { get; set; }
             public DateTime CreatedAt { get; set; }
             public List<int> PostIds { get; set; } = new List<int>();
         }
@@ -27,7 +27,7 @@ namespace Services.RequestsResponses.Apartment
             public double Area { get; set; }
             public string ApartmentType { get; set; }
             public string Status { get; set; }
-            public int NumberOfBedrooms { get; set; }
+            public int NumberBathroom { get; set; }
             public DateTime CreatedAt { get; set; }
         }
     }

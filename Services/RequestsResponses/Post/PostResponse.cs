@@ -1,4 +1,5 @@
 ﻿using Services.RequestsResponses.Apartment;
+using Services.RequestsResponses.Utility;
 
 namespace Services.RequestsResponses.Post
 {
@@ -12,11 +13,22 @@ namespace Services.RequestsResponses.Post
             public bool? IsPrimary { get; set; }
         }
 
+        public class PostUtilityInfo
+        {
+            public int UtilityId { get; set; }
+            public string Name { get; set; } = null!;
+            public string? Notes { get; set; }
+        }
+
         public class PostGetAll
         {
             public int PostId { get; set; }
             public int? ApartmentId { get; set; }
             public int? UserId { get; set; }
+            public string? UserName { get; set; }
+            public string? PhoneNumber { get; set; }
+            public string? Email { get; set; }
+            public string? FullName { get; set; }
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
             public double? Price { get; set; }
@@ -24,12 +36,14 @@ namespace Services.RequestsResponses.Post
             public string Status { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
             public List<PostImageInfo> Images { get; set; } = new List<PostImageInfo>();
+            public List<PostUtilityInfo> Utilities { get; set; } = new List<PostUtilityInfo>();
         }
         public class PostGetAllForUser
         {
             public int PostId { get; set; }
             public int UserId { get; set; }
             public string UserName { get; set; } = null!;
+            public string? PhoneNumber { get; set; }
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
         }
@@ -38,6 +52,7 @@ namespace Services.RequestsResponses.Post
             public int PostId { get; set; }
             public int UserId { get; set; }
             public string UserName { get; set; } = null!;
+            public string? PhoneNumber { get; set; }
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
@@ -57,6 +72,7 @@ namespace Services.RequestsResponses.Post
             public string SubdivisionName { get; set; } = null!;
             public int? UserId { get; set; }
             public string UserName { get; set; } = null!;
+            public string? PhoneNumber { get; set; }
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
             public double? Price { get; set; }
@@ -64,14 +80,16 @@ namespace Services.RequestsResponses.Post
             public string Status { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
             public List<PostImageInfo> Images { get; set; } = new List<PostImageInfo>();
+            public List<PostUtilityInfo> Utilities { get; set; } = new List<PostUtilityInfo>();
         }
         public class PostDetailForLandLord
         {
             public int PostId { get; set; }
             public int? ApartmentId { get; set; }
-            public ApartmentResponse.ApartmentDetail Apartment { get; set; }
+            public ApartmentResponse.ApartmentDetail Apartment { get; set; } = null!;
             public int? UserId { get; set; }
             public string UserName { get; set; } = null!;
+            public string? PhoneNumber { get; set; }
             public string Title { get; set; } = null!;
             public string Description { get; set; } = null!;
             public double? Price { get; set; }
@@ -79,6 +97,7 @@ namespace Services.RequestsResponses.Post
             public string Status { get; set; } = null!;
             public DateTime CreatedAt { get; set; }
             public List<PostImageInfo> Images { get; set; } = new List<PostImageInfo>();
+            public List<PostUtilityInfo> Utilities { get; set; } = new List<PostUtilityInfo>();
         }
     }
 }

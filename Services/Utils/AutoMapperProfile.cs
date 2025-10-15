@@ -16,7 +16,9 @@ namespace Services.Utils
         public AutoMapperProfile()
         {
             // Post
-            CreateMap<PostResponse.PostGetAll, Post>().ReverseMap();
+            CreateMap<PostResponse.PostGetAll, Post>().ReverseMap()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.Username : null))
+                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User != null ? src.User.PhoneNumber : null));
             CreateMap<PostRequest.PostCreateForUser, Post>();
             CreateMap<PostRequest.PostCreateForLandLord, Post>();
             
@@ -27,10 +29,10 @@ namespace Services.Utils
                 .ForMember(dest => dest.BuildingId, opt => opt.MapFrom(src => src.BuildingId ?? 0))
                 .ForMember(dest => dest.Floor, opt => opt.MapFrom(src => src.Floor ?? 0))
                 .ForMember(dest => dest.Area, opt => opt.MapFrom(src => (double)(src.Area ?? 0)))
-                .ForMember(dest => dest.NumberOfBedrooms, opt => opt.MapFrom(src => src.NumberBathroom ?? 0))
+                .ForMember(dest => dest.NumberBathroom, opt => opt.MapFrom(src => src.NumberBathroom ?? 0))
                 .ForMember(dest => dest.PostIds, opt => opt.MapFrom(src => src.Posts.Select(p => p.PostId).ToList()));
             CreateMap<ApartmentResponse.ApartmentDetail, Apartment>().ReverseMap()
-                .ForMember(dest => dest.NumberOfBedrooms, opt => opt.MapFrom(src => src.NumberBathroom ?? 0))
+                .ForMember(dest => dest.NumberBathroom, opt => opt.MapFrom(src => src.NumberBathroom ?? 0))
                 .ForMember(dest => dest.Floor, opt => opt.MapFrom(src => src.Floor ?? 0))
                 .ForMember(dest => dest.Area, opt => opt.MapFrom(src => (double)(src.Area ?? 0)));
             CreateMap<ApartmentRequest.ApartmentCreate, Apartment>()
